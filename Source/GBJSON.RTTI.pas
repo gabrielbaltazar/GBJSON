@@ -210,7 +210,6 @@ var
   ignoreProperties: TArray<String>;
   i: Integer;
 begin
-  result := False;
   ignoreProperties := AClass.JsonIgnoreFields;
   for i := 0 to Pred(Length(ignoreProperties)) do
   begin
@@ -315,7 +314,6 @@ end;
 class function TGBObjectHelper.JsonIgnoreFields: TArray<String>;
 var
   ignore: JSONIgnore;
-  rProp: TRttiProperty;
 begin
   result := [];
   ignore := GetAttribute<JSONIgnore>;

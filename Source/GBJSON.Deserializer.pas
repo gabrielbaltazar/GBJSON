@@ -35,7 +35,7 @@ type TGBJSONDeserializer<T: class, constructor> = class(TGBJSONBase, IGBJSONDese
     function ListToJSONArray(Value: TObjectList<T>): TJSONArray;
 
     class function New(bUseIgnore: Boolean = True): IGBJSONDeserializer<T>;
-    constructor create(bUseIgnore: Boolean = True);
+    constructor create(bUseIgnore: Boolean = True); reintroduce;
     destructor  Destroy; override;
 end;
 
