@@ -1,0 +1,20 @@
+{
+    "idClient": 5,
+    "name": "Client 1",
+    "dateOfBirthday": "2020-06-13T13:08:00",
+    "address": {
+        "address": "Street 1 \\ 2 \/ 3",
+        "number": 15,
+        "city": "Center"
+    },
+    "phones": [
+        {
+            "phoneType": "ptMobile",
+            "number": "99999999"
+        },
+        {
+            "phoneType": "ptFixed",
+            "number": "8888888"
+        }
+    ]
+}
