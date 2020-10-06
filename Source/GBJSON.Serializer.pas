@@ -30,7 +30,7 @@ type TGBJSONSerializer<T: class, constructor> = class(TGBJSONBase, IGBJSONSerial
     function  JsonStringToList(Value: String): TObjectList<T>;
 
     class function New(bUseIgnore: Boolean): IGBJSONSerializer<T>;
-    constructor create(bUseIgnore: Boolean = True);
+    constructor create(bUseIgnore: Boolean = True); reintroduce;
     destructor  Destroy; override;
 end;
 
