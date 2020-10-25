@@ -92,7 +92,7 @@ begin
 
     if rttiProperty.IsInteger then
     begin
-      rttiProperty.SetValue(AObject, jsonValue.Value.ToInteger);
+      rttiProperty.SetValue(AObject, StrToIntDef( jsonValue.Value, 0));
       Continue;
     end;
 
@@ -112,7 +112,7 @@ begin
 
     if rttiProperty.IsFloat then
     begin
-      rttiProperty.SetValue(AObject, TValue.From<Double>(jsonValue.Value.ToDouble));
+      rttiProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(jsonValue.Value, 0)));
       Continue;
     end;
 
