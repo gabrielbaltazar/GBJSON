@@ -178,7 +178,13 @@ begin
 
   result := '[';
   for i := 0 to value.GetArrayLength - 1 do
-    result := Result + ObjectToJsonString(value.GetArrayElement(i).AsObject) + ',';
+  begin
+    if value.GetArrayElement(i).IsObject then
+      result := Result + ObjectToJsonString(value.GetArrayElement(i).AsObject) + ','
+	else
+	  result := Result + '"' + (value.GetArrayElement(i).AsString) + '"' + ',';
+  end;
+  
   result[Length(Result)] := ']';
 end;
 
