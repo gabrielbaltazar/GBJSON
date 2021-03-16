@@ -7,92 +7,112 @@ uses
   System.Generics.Collections;
 
 type
-  TTipoPessoa = (tpFisica, tpJuridica);
+  TPersonType = (tpFisica, tpJuridica);
 
-  TTelefone = class
+  TPhone = class
   private
     FidTel: Double;
-    Fnumero: string;
+    Fnumber: string;
     public
       property idTel: Double read FidTel write FidTel;
-      property numero: string read Fnumero write Fnumero;
+      property number: string read Fnumber write Fnumber;
   end;
 
-  TEndereco = class
+  TAddress = class
   private
-    FidEndereco: string;
-    Flogradouro: string;
+    FidAddress: string;
+    Fstreet: string;
     public
-      property idEndereco: string read FidEndereco write FidEndereco;
-      property logradouro: string read Flogradouro write Flogradouro;
+      property idAddress: string read FidAddress write FidAddress;
+      property street: string read Fstreet write Fstreet;
   end;
 
-  TPessoa = class
+  TPerson = class
   private
-    FidPessoa: Double;
-    Fnome: string;
-    Fendereco: TEndereco;
-    Ftelefones: TObjectList<TTelefone>;
-    FtipoPessoa: TTipoPessoa;
-    Fidade: Integer;
-    FdataCadastro: TDateTime;
-    Fobservacao: String;
-    Fmedia: Double;
-    Fativo: Boolean;
+    FidPerson: Double;
+    Fname: string;
+    Faddress: TAddress;
+    Fphones: TObjectList<TPhone>;
+    FpersonType: TPersonType;
+    Fage: Integer;
+    FcreationDate: TDateTime;
+    Fobs: String;
+    Faverage: Double;
+    Factive: Boolean;
     public
-      property idPessoa: Double read FidPessoa write FidPessoa;
-      property nome: string read Fnome write Fnome;
-      property idade: Integer read Fidade write Fidade;
-      property dataCadastro: TDateTime read FdataCadastro write FdataCadastro;
-      property media: Double read Fmedia write Fmedia;
-      property ativo: Boolean read Fativo write Fativo;
-      property observacao: String read Fobservacao write Fobservacao;
-      property endereco: TEndereco read Fendereco write Fendereco;
-      property tipoPessoa: TTipoPessoa read FtipoPessoa write FtipoPessoa;
-      property telefones: TObjectList<TTelefone> read Ftelefones write Ftelefones;
+      property idPerson: Double read FidPerson write FidPerson;
+      property name: string read Fname write Fname;
+      property age: Integer read Fage write Fage;
+      property creationDate: TDateTime read FcreationDate write FcreationDate;
+      property average: Double read Faverage write Faverage;
+      property active: Boolean read Factive write Factive;
+      property obs: String read Fobs write Fobs;
+      property address: TAddress read Faddress write Faddress;
+      property personType: TPersonType read FpersonType write FpersonType;
+      property phones: TObjectList<TPhone> read Fphones write Fphones;
 
-      class function CreatePessoa: TPessoa;
+      class function CreatePerson: TPerson;
 
       constructor create;
       destructor  Destroy; override;
   end;
 
+  TUpperPerson = class
+  private
+    FPERSON_ID: Double;
+    FPERSON_NAME: string;
+  public
+    property PERSON_ID: Double read FPERSON_ID write FPERSON_ID;
+    property PERSON_NAME: string read FPERSON_NAME write FPERSON_NAME;
+
+    class function CreatePerson: TUpperPerson;
+  end;
+
 implementation
 
-{ TPessoa }
+{ TPerson }
 
-constructor TPessoa.create;
+constructor TPerson.create;
 begin
-  FtipoPessoa := tpFisica;
-  Fendereco   := TEndereco.Create;
-  Ftelefones  := TObjectList<TTelefone>.Create;
-  Fativo      := False;
+  FpersonType := tpFisica;
+  Faddress   := TAddress.Create;
+  Fphones  := TObjectList<TPhone>.Create;
+  Factive      := False;
 end;
 
-class function TPessoa.CreatePessoa: TPessoa;
+class function TPerson.CreatePerson: TPerson;
 begin
-  result := TPessoa.Create;
-  Result.idPessoa := 1;
-  Result.nome := 'Teste';
-  Result.idade := 18;
-  Result.media := 10;
-  Result.dataCadastro := Now;
-  Result.endereco.idEndereco := '2';
-  Result.endereco.logradouro := 'Teste';
-  Result.telefones.Add(TTelefone.Create);
-  Result.telefones.Last.idTel := 3;
-  Result.telefones.Last.numero := '321654987';
+  result := TPerson.Create;
+  Result.idPerson := 1;
+  Result.name := 'Teste';
+  Result.age := 18;
+  Result.average := 10;
+  Result.creationDate := Now;
+  Result.address.idAddress := '2';
+  Result.address.street := 'Teste';
+  Result.phones.Add(TPhone.Create);
+  Result.phones.Last.idTel := 3;
+  Result.phones.Last.number := '321654987';
 
-  Result.telefones.Add(TTelefone.Create);
-  Result.telefones.Last.idTel := 4;
-  Result.telefones.Last.numero := '11111111';
+  Result.phones.Add(TPhone.Create);
+  Result.phones.Last.idTel := 4;
+  Result.phones.Last.number := '11111111';
 end;
 
-destructor TPessoa.Destroy;
+destructor TPerson.Destroy;
 begin
-  Fendereco.Free;
-  Ftelefones.Free;
+  Faddress.Free;
+  Fphones.Free;
   inherited;
+end;
+
+{ TUpperPerson }
+
+class function TUpperPerson.CreatePerson: TUpperPerson;
+begin
+  result := TUpperPerson.Create;
+  result.FPERSON_ID := 1;
+  result.FPERSON_NAME := 'Person Test';
 end;
 
 end.
