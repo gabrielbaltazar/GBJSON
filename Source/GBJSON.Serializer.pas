@@ -73,7 +73,7 @@ begin
     if (FUseIgnore) and (rttiProperty.IsIgnore(AObject.ClassType)) then
       Continue;
 
-    jsonValue := AJsonObject.Values[rttiProperty.Name];
+    jsonValue := AJsonObject.Values[rttiProperty.JSONName];
 
     if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
       Continue;

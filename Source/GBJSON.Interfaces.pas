@@ -3,10 +3,14 @@ unit GBJSON.Interfaces;
 interface
 
 uses
+  GBJSON.Config,
   System.JSON,
   System.Generics.Collections;
 
 type
+  TGBJSONConfig = GBJSON.Config.TGBJSONConfig;
+  TCaseDefinition = GBJSON.Config.TCaseDefinition;
+
   IGBJSONSerializer<T: class, constructor> = interface
     ['{F808BE4D-AF1A-4BDF-BF3B-945C39762853}']
     procedure JsonObjectToObject(AObject: TObject; Value: TJSONObject); overload;

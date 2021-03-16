@@ -255,7 +255,7 @@ begin
        (not rttiProperty.IsEmpty(AObject))
     then
     begin
-      result := result + Format('"%s":', [rttiProperty.Name]);
+      result := result + Format('"%s":', [rttiProperty.JSONName]);
       result := result + ValueToJson(AObject, rttiProperty) + ',';
     end;
   end;

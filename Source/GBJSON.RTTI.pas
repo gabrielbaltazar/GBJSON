@@ -5,6 +5,7 @@ interface
 uses
   System.Rtti,
   System.SysUtils,
+  GBJSON.Config,
   GBJSON.Attributes;
 
 type
@@ -54,6 +55,8 @@ type
       function IsEmpty(AObject: TObject): Boolean;
 
       function IsIgnore(AClass: TClass): Boolean;
+
+      function JSONName: String;
 
       function GetListType(AObject: TObject): TRttiType;
   end;
@@ -184,7 +187,7 @@ begin
   if (Self.IsList) then
   begin
     objectList := Self.GetValue(AObject).AsObject;
-    if objectList.GetPropertyValue('Count').AsInteger = 0 then
+    if (not Assigned(objectList)) or (objectList.GetPropertyValue('Count').AsInteger = 0) then
       Exit(True);
   end;
 
@@ -269,6 +272,38 @@ end;
 function TGBRTTIPropertyHelper.IsVariant: Boolean;
 begin
   result := Self.PropertyType.TypeKind = tkVariant;
+end;
+
+function TGBRTTIPropertyHelper.JSONName: String;
+var
+  I: Integer;
+  LField: TArray<Char>;
+begin
+  case TGBJSONConfig.GetInstance.CaseDefinition of
+    cdNone : result := Self.Name;
+    cdLower: result := Self.Name.ToLower;
+    cdUpper: result := Self.Name.ToUpper;
+
+    cdLowerCamelCase: begin
+      // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
+      // Thanks Vinicius Sanchez
+      LField := Self.Name.ToCharArray;
+      I := Low(LField);
+      While i <= High(LField) do
+      begin
+        if (LField[I] = '_') then
+        begin
+          Inc(I);
+          Result := Result + UpperCase(LField[I]);
+        end
+        else
+          Result := Result + LowerCase(LField[I]);
+        Inc(I);
+      end;
+      if Result.IsEmpty then
+        Result := Self.Name;
+    end;
+  end;
 end;
 
 { TGBObjectHelper }
