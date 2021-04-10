@@ -275,34 +275,42 @@ begin
 end;
 
 function TGBRTTIPropertyHelper.JSONName: String;
-var
-  I: Integer;
-  LField: TArray<Char>;
+  Function CamelCase(Value: String): String;
+  var
+    i: Integer;
+    LField: TArray<Char>;
+  begin
+    // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
+    // Thanks Vinicius Sanchez
+    LField := Value.ToCharArray;
+    i := Low(LField);
+    While i <= High(LField) do
+    begin
+      if (LField[i] = '_') then
+      begin
+        Inc(i);
+        Result := Result + UpperCase(LField[i]);
+      end
+      else
+        Result := Result + LowerCase(LField[i]);
+      Inc(i);
+    end;
+    if Result.IsEmpty then
+      Result := Value;
+  end;
+
 begin
   case TGBJSONConfig.GetInstance.CaseDefinition of
-    cdNone : result := Self.Name;
-    cdLower: result := Self.Name.ToLower;
-    cdUpper: result := Self.Name.ToUpper;
-
-    cdLowerCamelCase: begin
-      // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
-      // Thanks Vinicius Sanchez
-      LField := Self.Name.ToCharArray;
-      I := Low(LField);
-      While i <= High(LField) do
-      begin
-        if (LField[I] = '_') then
-        begin
-          Inc(I);
-          Result := Result + UpperCase(LField[I]);
-        end
-        else
-          Result := Result + LowerCase(LField[I]);
-        Inc(I);
-      end;
-      if Result.IsEmpty then
-        Result := Self.Name;
-    end;
+    cdNone:
+      Result := Self.Name;
+    cdLower:
+      Result := Self.Name.ToLower;
+    cdUpper:
+      Result := Self.Name.ToUpper;
+    cdLowerCamelCase:
+      Result := CamelCase(Self.Name).ToLower;
+    cdUpperCamelCase:
+      Result := CamelCase(Self.Name).ToUpper;
   end;
 end;
 
