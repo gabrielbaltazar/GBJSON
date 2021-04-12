@@ -321,14 +321,13 @@ function TGBRTTIPropertyHelper.JSONName: String;
 
 begin
   case TGBJSONConfig.GetInstance.CaseDefinition of
-    cdNone:
-      Result := Self.Name;
-    cdLower:
-      Result := Self.Name.ToLower;
-    cdUpper:
-      Result := Self.Name.ToUpper;
+    cdNone : result := Self.Name;
+    cdLower: result := Self.Name.ToLower;
+    cdUpper: result := Self.Name.ToUpper;
+
     cdLowerCamelCase:
       Result := CamelCase(Self.Name);
+
     cdUpperCamelCase:
       Result := prdUpperCamelCase(CamelCase(Self.Name));
   end;
