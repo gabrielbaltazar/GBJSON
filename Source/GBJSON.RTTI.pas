@@ -275,34 +275,61 @@ begin
 end;
 
 function TGBRTTIPropertyHelper.JSONName: String;
-var
-  I: Integer;
-  LField: TArray<Char>;
+  Function prdUpperCamelCase(Value: String): String;
+  var
+    I: Integer;
+    liBaixo: Integer;
+    LField: TArray<Char>;
+  begin
+    LField := Value.ToCharArray;
+    I := Low(LField);
+    liBaixo := I;
+    While I <= High(LField) do
+    begin
+      if (liBaixo = I) then
+        Result := Result + UpperCase(LField[I])
+      else
+        Result := Result + LField[I];
+      Inc(I);
+    end;
+    if Result.IsEmpty then
+      Result := Value;
+  end;
+  Function CamelCase(Value: String): String;
+  var
+    i: Integer;
+    LField: TArray<Char>;
+  begin
+    // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
+    // Thanks Vinicius Sanchez
+    LField := Value.ToCharArray;
+    i := Low(LField);
+    While i <= High(LField) do
+    begin
+      if (LField[i] = '_') then
+      begin
+        Inc(i);
+        Result := Result + UpperCase(LField[i]);
+      end
+      else
+        Result := Result + LowerCase(LField[i]);
+      Inc(i);
+    end;
+    if Result.IsEmpty then
+      Result := Value;
+  end;
+
 begin
   case TGBJSONConfig.GetInstance.CaseDefinition of
     cdNone : result := Self.Name;
     cdLower: result := Self.Name.ToLower;
     cdUpper: result := Self.Name.ToUpper;
 
-    cdLowerCamelCase: begin
-      // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
-      // Thanks Vinicius Sanchez
-      LField := Self.Name.ToCharArray;
-      I := Low(LField);
-      While i <= High(LField) do
-      begin
-        if (LField[I] = '_') then
-        begin
-          Inc(I);
-          Result := Result + UpperCase(LField[I]);
-        end
-        else
-          Result := Result + LowerCase(LField[I]);
-        Inc(I);
-      end;
-      if Result.IsEmpty then
-        Result := Self.Name;
-    end;
+    cdLowerCamelCase:
+      Result := CamelCase(Self.Name);
+
+    cdUpperCamelCase:
+      Result := prdUpperCamelCase(CamelCase(Self.Name));
   end;
 end;
 

@@ -57,6 +57,9 @@ type TGBJSONTestDeserializePerson = class
     [Test] procedure TestObjectLowerCase;
     [Test] procedure TestObjectUpperCase;
 
+    [Test] procedure TestObjectLowerCamelCase;
+    [Test] procedure TestObjectUpperCamelCase;
+
     [Test] procedure TestObjectListFill;
     [Test] procedure TestObjectListEmpty;
     [Test] procedure TestObjectListOneElement;
@@ -382,6 +385,38 @@ begin
   FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPerson);
   Assert.AreEqual(FPerson.name, FAuxPerson.name);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestObjectLowerCamelCase;
+begin
+  FreeAndNil(FJSONObject);
+  TGBJSONConfig.GetInstance
+    .CaseDefinition(TCaseDefinition.cdLowerCamelCase);
+
+  FUpperPerson.PERSON_ID := 1;
+  FUpperPerson.PERSON_NAME := 'Test Person';
+
+  FJSONObject := TGBJSONDefault.Deserializer<TUpperPerson>
+                    .ObjectToJsonObject(FUpperPerson);
+
+  Assert.IsNotNull(FJSONObject.GetValue('personId'));
+  Assert.IsNotNull(FJSONObject.GetValue('personName'));
+end;
+
+procedure TGBJSONTestDeserializePerson.TestObjectUpperCamelCase;
+begin
+  FreeAndNil(FJSONObject);
+  TGBJSONConfig.GetInstance
+    .CaseDefinition(TCaseDefinition.cdUpperCamelCase);
+
+  FUpperPerson.PERSON_ID := 1;
+  FUpperPerson.PERSON_NAME := 'Test Person';
+
+  FJSONObject := TGBJSONDefault.Deserializer<TUpperPerson>
+                    .ObjectToJsonObject(FUpperPerson);
+
+  Assert.IsNotNull(FJSONObject.GetValue('PersonId'));
+  Assert.IsNotNull(FJSONObject.GetValue('PersonName'));
 end;
 
 end.
