@@ -275,6 +275,26 @@ begin
 end;
 
 function TGBRTTIPropertyHelper.JSONName: String;
+  Function prdUpperCamelCase(Value: String): String;
+  var
+    I: Integer;
+    liBaixo: Integer;
+    LField: TArray<Char>;
+  begin
+    LField := Value.ToCharArray;
+    I := Low(LField);
+    liBaixo := I;
+    While I <= High(LField) do
+    begin
+      if (liBaixo = I) then
+        Result := Result + UpperCase(LField[I])
+      else
+        Result := Result + LField[I];
+      Inc(I);
+    end;
+    if Result.IsEmpty then
+      Result := Value;
+  end;
   Function CamelCase(Value: String): String;
   var
     i: Integer;
@@ -308,9 +328,9 @@ begin
     cdUpper:
       Result := Self.Name.ToUpper;
     cdLowerCamelCase:
-      Result := CamelCase(Self.Name).ToLower;
+      Result := CamelCase(Self.Name);
     cdUpperCamelCase:
-      Result := CamelCase(Self.Name).ToUpper;
+      Result := prdUpperCamelCase(CamelCase(Self.Name));
   end;
 end;
 

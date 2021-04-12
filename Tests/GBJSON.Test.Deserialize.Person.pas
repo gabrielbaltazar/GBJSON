@@ -399,8 +399,8 @@ begin
   FJSONObject := TGBJSONDefault.Deserializer<TUpperPerson>
                     .ObjectToJsonObject(FUpperPerson);
 
-  Assert.IsNotNull(FJSONObject.GetValue('personid'));
-  Assert.IsNotNull(FJSONObject.GetValue('personname'));
+  Assert.IsNotNull(FJSONObject.GetValue('personId'));
+  Assert.IsNotNull(FJSONObject.GetValue('personName'));
 end;
 
 procedure TGBJSONTestDeserializePerson.TestObjectUpperCamelCase;
@@ -415,8 +415,8 @@ begin
   FJSONObject := TGBJSONDefault.Deserializer<TUpperPerson>
                     .ObjectToJsonObject(FUpperPerson);
 
-  Assert.IsNotNull(FJSONObject.GetValue('PERSONID'));
-  Assert.IsNotNull(FJSONObject.GetValue('PERSONNAME'));
+  Assert.IsNotNull(FJSONObject.GetValue('PersonId'));
+  Assert.IsNotNull(FJSONObject.GetValue('PersonName'));
 end;
 
 end.

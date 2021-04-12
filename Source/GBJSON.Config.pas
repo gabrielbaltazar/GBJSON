@@ -6,7 +6,7 @@ uses
   System.SysUtils;
 
 type
-  TCaseDefinition = (cdNone, cdLower, cdUpper, cdLowerCamelCase, cdUpperCamelCase, cdCamelCase);
+  TCaseDefinition = (cdNone, cdLower, cdUpper, cdLowerCamelCase, cdUpperCamelCase);
 
   TGBJSONConfig = class
   private
