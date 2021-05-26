@@ -62,11 +62,15 @@ end;
 
 procedure TGBJSONSerializer<T>.jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
 var
-  rttiProperty: TRttiProperty;
-  jsonValue   : TJSONValue;
-  date        : TDateTime;
-  enumValue   : Integer;
-  boolValue   : Boolean;
+  rttiProperty : TRttiProperty;
+  rttiType     : TRttiType;
+  rttiValues   : TArray<TValue>;
+  jsonValue    : TJSONValue;
+  date         : TDateTime;
+  enumValue    : Integer;
+  boolValue    : Boolean;
+  value        : TValue;
+  i            : Integer;
 begin
   for rttiProperty in AType.GetProperties do
   begin
@@ -137,6 +141,29 @@ begin
         boolValue := jsonValue.Value.ToLower.Equals('true');
         rttiProperty.SetValue(AObject, TValue.From<Boolean>(boolValue));
         Continue;
+      end;
+
+      if rttiProperty.IsArray then
+      begin
+        if (not Assigned(jsonValue)) or (not (jsonValue is TJSONArray)) then
+          Continue;
+
+        rttiType := rttiProperty.GetListType(AObject);
+        SetLength(rttiValues, TJSONArray(jsonValue).Count);
+        for i := 0 to Pred(TJSONArray(jsonValue).Count) do
+        begin
+          if rttiType.TypeKind.IsString then
+            rttiValues[i] := TValue.From<String>(TJSONArray(jsonValue).Items[i].Value)
+          else
+          if rttiType.TypeKind.IsInteger then
+            rttiValues[i] := TValue.From<Integer>(TJSONArray(jsonValue).Items[i].Value.ToInteger)
+          else
+          if rttiType.TypeKind.IsFloat then
+            rttiValues[i] := TValue.From<Double>(TJSONArray(jsonValue).Items[i].Value.ToDouble)
+        end;
+
+        rttiProperty.SetValue(AObject,
+            TValue.FromArray(rttiProperty.PropertyType.Handle, rttiValues));
       end;
     except
       on e : Exception do

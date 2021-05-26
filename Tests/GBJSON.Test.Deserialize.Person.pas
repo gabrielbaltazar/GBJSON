@@ -67,6 +67,10 @@ type TGBJSONTestDeserializePerson = class
     [Test] procedure TestListOneElement;
     [Test] procedure TestListNull;
 
+    [Test] procedure TestArrayStringFill;
+    [Test] procedure TestArrayStringEmpty;
+    [Test] procedure TestArrayStringOneElement;
+
     constructor create;
     destructor  Destroy; override;
 end;
@@ -108,6 +112,40 @@ begin
   FreeAndNil(FPerson);
   FreeAndNil(FUpperPerson);
   FreeAndNil(FAuxPerson);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestArrayStringEmpty;
+begin
+  FPerson.qualities := [];
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (Length(FAuxPerson.qualities) = 0);
+  Assert.AreEqual(Length(FPerson.qualities), Length(FAuxPerson.qualities));
+end;
+
+procedure TGBJSONTestDeserializePerson.TestArrayStringFill;
+begin
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (Length(FAuxPerson.qualities) > 0);
+  Assert.AreEqual('q1', FAuxPerson.qualities[0]);
+  Assert.AreEqual('q2', FAuxPerson.qualities[1]);
+
+  Assert.AreEqual(Length(FPerson.qualities), Length(FAuxPerson.qualities));
+end;
+
+procedure TGBJSONTestDeserializePerson.TestArrayStringOneElement;
+begin
+  FPerson.qualities := ['q1'];
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (Length(FAuxPerson.qualities) > 0);
+  Assert.AreEqual('q1', FAuxPerson.qualities[0]);
+
+  Assert.AreEqual(Length(FPerson.qualities), Length(FAuxPerson.qualities));
 end;
 
 procedure TGBJSONTestDeserializePerson.TestBooleanFalse;

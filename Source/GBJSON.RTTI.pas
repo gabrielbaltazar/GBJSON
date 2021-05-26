@@ -149,11 +149,17 @@ var
   ListType     : TRttiType;
   ListTypeName : string;
 begin
-  ListType := TGBRTTI.GetInstance.GetType(Self.GetValue(AObject).AsObject.ClassType);
-  ListTypeName := ListType.ToString;
+  if not Self.GetValue(AObject).IsArray then
+  begin
+    ListType := TGBRTTI.GetInstance.GetType(Self.GetValue(AObject).AsObject.ClassType);
+    ListTypeName := ListType.ToString;
+  end
+  else
+    ListTypeName := Self.PropertyType.ToString;
 
   ListTypeName := ListTypeName.Replace('TObjectList<', EmptyStr);
   ListTypeName := ListTypeName.Replace('TList<', EmptyStr);
+  ListTypeName := ListTypeName.Replace('TArray<', EmptyStr);
   ListTypeName := ListTypeName.Replace('>', EmptyStr);
 
   result := TGBRTTI.GetInstance.FindType(ListTypeName);

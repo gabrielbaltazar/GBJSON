@@ -40,7 +40,9 @@ type
     Faverage: Double;
     Factive: Boolean;
     Fnotes: TList<Double>;
+    Fqualities: TArray<String>;
   public
+    property qualities: TArray<String> read Fqualities write Fqualities;
     property idPerson: Double read FidPerson write FidPerson;
     property name: string read Fname write Fname;
     property age: Integer read Fage write Fage;
@@ -102,6 +104,8 @@ begin
   Result.phones.Last.number := '11111111';
 
   Result.notes.AddRange([5, 6]);
+
+  Result.qualities := ['q1', 'q2'];
 end;
 
 destructor TPerson.Destroy;

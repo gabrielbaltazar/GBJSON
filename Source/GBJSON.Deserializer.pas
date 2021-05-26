@@ -207,6 +207,8 @@ function TGBJSONDeserializer<T>.ValueToJson(AObject: TObject; AProperty: TRttiPr
 var
   value : TValue;
   data  : TDateTime;
+  listType: TRttiType;
+  i: Integer;
 begin
   value := AProperty.GetValue(AObject);
 
@@ -224,6 +226,28 @@ begin
 
   if AProperty.IsBoolean then
     Exit(IfThen(value.AsBoolean, 'true', 'false'));
+
+  if AProperty.IsArray then
+  begin
+    result := '[';
+
+    listType := AProperty.GetListType(AObject);
+    for i := 0 to Pred(value.GetArrayLength) do
+    begin
+      if listType.TypeKind.IsString then
+        result := result + '"' + value.GetArrayElement(i).AsString + '"'
+      else
+      if listType.TypeKind.IsInteger then
+        result := Result + value.GetArrayElement(i).AsInteger.ToString
+      else
+      if listType.TypeKind.IsFloat then
+        result := Result + value.GetArrayElement(i).AsExtended.ToString;
+
+      result := result + ',';
+    end;
+
+    result[Length(Result)] := ']';
+  end;
 
   if AProperty.IsDateTime then
   begin
