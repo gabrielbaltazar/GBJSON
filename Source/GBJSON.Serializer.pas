@@ -160,6 +160,7 @@ procedure TGBJSONSerializer<T>.jsonObjectToObjectList(AObject: TObject; AJsonArr
 var
   i          : Integer;
   objectItem : TObject;
+  value      : TValue;
   listType   : TRttiType;
 begin
   if not Assigned(AJsonArray) then
@@ -168,11 +169,27 @@ begin
   listType := AProperty.GetListType(AObject);
   for i := 0 to Pred(AJsonArray.Count) do
   begin
-    objectItem := listType.AsInstance.MetaclassType.Create;
-    objectItem.invokeMethod('create', []);
+    if listType.TypeKind.IsObject then
+    begin
+      objectItem := listType.AsInstance.MetaclassType.Create;
+      objectItem.invokeMethod('create', []);
 
-    Self.JsonObjectToObject(objectItem, TJSONObject(AJsonArray.Items[i]));
-    AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [objectItem]);
+      Self.JsonObjectToObject(objectItem, TJSONObject(AJsonArray.Items[i]));
+      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [objectItem]);
+    end
+    else
+    begin
+      if listType.TypeKind.IsString then
+        value := TValue.From<String>(AJsonArray.Items[i].GetValue<String>);
+
+      if listType.TypeKind.IsFloat then
+        value := TValue.From<Double>(AJsonArray.Items[i].GetValue<Double>);
+
+      if listType.TypeKind.IsInteger then
+        value := TValue.From<Integer>(AJsonArray.Items[i].GetValue<Integer>);
+
+      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [value]);
+    end;
   end;
 end;
 

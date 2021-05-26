@@ -60,8 +60,12 @@ type TGBJSONTestDeserializePerson = class
     [Test] procedure TestObjectListFill;
     [Test] procedure TestObjectListEmpty;
     [Test] procedure TestObjectListOneElement;
-
     [Test] procedure TestObjectListNull;
+
+    [Test] procedure TestListFill;
+    [Test] procedure TestListEmpty;
+    [Test] procedure TestListOneElement;
+    [Test] procedure TestListNull;
 
     constructor create;
     destructor  Destroy; override;
@@ -223,6 +227,54 @@ begin
 
   FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPerson.age, FAuxPerson.age);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestListEmpty;
+begin
+  FPerson.notes.Clear;
+
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (FAuxPerson.notes.Count = 0);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestListFill;
+begin
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (FAuxPerson.notes.Count > 0);
+  Assert.IsTrue (FAuxPerson.notes[0] > 0);
+
+  Assert.AreEqual(FPerson.notes.Count, FAuxPerson.notes.Count);
+  Assert.AreEqual(FPerson.notes[0], FAuxPerson.notes[0]);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestListNull;
+begin
+  FPerson.notes.Free;
+  FPerson.notes := nil;
+
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsNotNull(FAuxPerson.notes);
+  Assert.IsTrue (FAuxPerson.notes.Count = 0);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestListOneElement;
+begin
+  FPerson.notes.Clear;
+  FPerson.notes.Add(2);
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (FAuxPerson.notes.Count = 1);
+  Assert.AreEqual('2', FAuxPerson.notes[0].ToString);
+
+  Assert.AreEqual(FPerson.notes.Count, FAuxPerson.notes.Count);
+  Assert.AreEqual(FPerson.notes[0], FAuxPerson.notes[0]);
 end;
 
 procedure TGBJSONTestDeserializePerson.TestIntegerEmpty;

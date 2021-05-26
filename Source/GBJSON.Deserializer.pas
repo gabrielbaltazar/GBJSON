@@ -162,6 +162,7 @@ var
   method  : TRttiMethod;
   value   : TValue;
   i       : Integer;
+  jsonValue: string;
 begin
   value := AProperty.GetValue(AObject);
 
@@ -181,8 +182,22 @@ begin
   begin
     if value.GetArrayElement(i).IsObject then
       result := Result + ObjectToJsonString(value.GetArrayElement(i).AsObject) + ','
-	else
-	  result := Result + '"' + (value.GetArrayElement(i).AsString) + '"' + ',';
+  	else
+    begin
+      rttiType := AProperty.GetListType(AObject);
+      jsonValue:= EmptyStr;
+
+      if rttiType.TypeKind.IsString then
+        jsonValue := value.GetArrayElement(i).AsString.QuotedString
+      else
+      if rttiType.TypeKind.IsInteger then
+        jsonValue := value.GetArrayElement(i).AsInteger.ToString
+      else
+      if rttiType.TypeKind.IsFloat then
+        jsonValue := value.GetArrayElement(i).AsExtended.ToString;
+
+      result := result + jsonValue + ',';
+    end;
   end;
   
   result[Length(Result)] := ']';

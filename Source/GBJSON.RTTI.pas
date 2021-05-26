@@ -5,6 +5,7 @@ interface
 uses
   System.Rtti,
   System.SysUtils,
+  System.TypInfo,
   GBJSON.Config,
   GBJSON.Attributes;
 
@@ -30,6 +31,16 @@ type
       class function GetInstance: IGBRTTI;
       constructor create;
       destructor  Destroy; override;
+  end;
+
+  TTypeKindHelper = record helper for TTypeKind
+  public
+    function IsString   : Boolean;
+    function IsInteger  : Boolean;
+    function IsArray    : Boolean;
+    function IsObject   : Boolean;
+    function IsFloat    : Boolean;
+    function IsVariant  : Boolean;
   end;
 
   TGBRTTITypeHelper = class helper for TRttiType
@@ -150,8 +161,7 @@ end;
 
 function TGBRTTIPropertyHelper.IsArray: Boolean;
 begin
-  Result := Self.PropertyType.TypeKind in
-    [tkSet, tkArray, tkDynArray]
+  Result := Self.PropertyType.TypeKind.IsArray;
 end;
 
 function TGBRTTIPropertyHelper.IsBoolean: Boolean;
@@ -205,7 +215,7 @@ end;
 
 function TGBRTTIPropertyHelper.IsFloat: Boolean;
 begin
-  result := (Self.PropertyType.TypeKind = tkFloat) and (not IsDateTime);
+  result := (Self.PropertyType.TypeKind.IsFloat) and (not IsDateTime);
 end;
 
 function TGBRTTIPropertyHelper.IsIgnore(AClass: TClass): Boolean;
@@ -239,7 +249,7 @@ end;
 
 function TGBRTTIPropertyHelper.IsInteger: Boolean;
 begin
-  result := Self.PropertyType.TypeKind in [tkInt64, tkInteger];
+  result := Self.PropertyType.TypeKind.IsInteger;
 end;
 
 function TGBRTTIPropertyHelper.IsList: Boolean;
@@ -255,23 +265,17 @@ end;
 
 function TGBRTTIPropertyHelper.IsObject: Boolean;
 begin
-  result := (not IsList) and (Self.PropertyType.TypeKind = tkClass);
+  result := (not IsList) and (Self.PropertyType.TypeKind.IsObject);
 end;
 
 function TGBRTTIPropertyHelper.IsString: Boolean;
 begin
-  result := Self.PropertyType.TypeKind in
-    [tkChar,
-     tkString,
-     tkWChar,
-     tkLString,
-     tkWString,
-     tkUString];
+  result := Self.PropertyType.TypeKind.IsString;
 end;
 
 function TGBRTTIPropertyHelper.IsVariant: Boolean;
 begin
-  result := Self.PropertyType.TypeKind = tkVariant;
+  result := Self.PropertyType.TypeKind.IsVariant;
 end;
 
 function TGBRTTIPropertyHelper.JSONName: String;
@@ -355,6 +359,45 @@ begin
 
   if Assigned(ignore) then
     result := ignore.IgnoreProperties;
+end;
+
+{ TTypeKindHelper }
+
+function TTypeKindHelper.IsArray: Boolean;
+begin
+  Result := Self in
+    [tkSet, tkArray, tkDynArray]
+end;
+
+function TTypeKindHelper.IsFloat: Boolean;
+begin
+  result := Self = tkFloat;
+end;
+
+function TTypeKindHelper.IsInteger: Boolean;
+begin
+  result := Self in [tkInt64, tkInteger];
+end;
+
+function TTypeKindHelper.IsObject: Boolean;
+begin
+  result := Self = tkClass;
+end;
+
+function TTypeKindHelper.IsString: Boolean;
+begin
+  result := Self in
+    [tkChar,
+     tkString,
+     tkWChar,
+     tkLString,
+     tkWString,
+     tkUString];
+end;
+
+function TTypeKindHelper.IsVariant: Boolean;
+begin
+  result := Self = tkVariant;
 end;
 
 end.
