@@ -61,13 +61,13 @@ type
       function IsBoolean  : Boolean;
       function IsVariant  : Boolean;
 
+      function JSONName: String;
+
       function GetAttribute<T: TCustomAttribute>: T;
 
       function IsEmpty(AObject: TObject): Boolean;
-
       function IsIgnore(AClass: TClass): Boolean;
-
-      function JSONName: String;
+      function IsReadOnly: Boolean;
 
       function GetListType(AObject: TObject): TRttiType;
   end;
@@ -268,6 +268,16 @@ begin
   result := (not IsList) and (Self.PropertyType.TypeKind.IsObject);
 end;
 
+function TGBRTTIPropertyHelper.IsReadOnly: Boolean;
+var
+  prop : JSONProp;
+begin
+  result := False;
+  prop := GetAttribute<JSONProp>;
+  if Assigned(prop) then
+    result := prop.readOnly;
+end;
+
 function TGBRTTIPropertyHelper.IsString: Boolean;
 begin
   result := Self.PropertyType.TypeKind.IsString;
@@ -282,11 +292,16 @@ function TGBRTTIPropertyHelper.JSONName: String;
 var
   I: Integer;
   LField: TArray<Char>;
+  prop : JSONProp;
 begin
+  result := Self.Name;
+  prop := GetAttribute<JSONProp>;
+  if (Assigned(prop)) and (not prop.name.IsEmpty) then
+    result := prop.name;
+
   case TGBJSONConfig.GetInstance.CaseDefinition of
-    cdNone : result := Self.Name;
-    cdLower: result := Self.Name.ToLower;
-    cdUpper: result := Self.Name.ToUpper;
+    cdLower: result := result.ToLower;
+    cdUpper: result := result.ToUpper;
 
     cdLowerCamelCase: begin
       // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
@@ -329,6 +344,9 @@ function TGBObjectHelper.GetPropertyValue(Name: String): TValue;
 var
   rttiProp: TRttiProperty;
 begin
+  if not Assigned(Self) then
+    Exit(nil);
+
   rttiProp := TGBRTTI.GetInstance.GetType(Self.ClassType)
                 .GetProperty(Name);
 

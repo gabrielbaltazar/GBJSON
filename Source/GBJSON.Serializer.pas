@@ -70,70 +70,80 @@ var
 begin
   for rttiProperty in AType.GetProperties do
   begin
-    if (FUseIgnore) and (rttiProperty.IsIgnore(AObject.ClassType)) then
-      Continue;
+    try
+      if (FUseIgnore) and (rttiProperty.IsIgnore(AObject.ClassType)) then
+        Continue;
 
-    jsonValue := AJsonObject.Values[rttiProperty.JSONName];
+      jsonValue := AJsonObject.Values[rttiProperty.JSONName];
 
-    if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
-      Continue;
+      if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
+        Continue;
 
-    if rttiProperty.IsString then
-    begin
-      rttiProperty.SetValue(AObject, jsonValue.Value);
-      Continue;
-    end;
+      if rttiProperty.IsString then
+      begin
+        rttiProperty.SetValue(AObject, jsonValue.Value);
+        Continue;
+      end;
 
-    if rttiProperty.IsVariant then
-    begin
-      rttiProperty.SetValue(AObject, jsonValue.Value);
-      Continue;
-    end;
+      if rttiProperty.IsVariant then
+      begin
+        rttiProperty.SetValue(AObject, jsonValue.Value);
+        Continue;
+      end;
 
-    if rttiProperty.IsInteger then
-    begin
-      rttiProperty.SetValue(AObject, jsonValue.Value.ToInteger);
-      Continue;
-    end;
+      if rttiProperty.IsInteger then
+      begin
+        rttiProperty.SetValue(AObject, jsonValue.Value.ToInteger);
+        Continue;
+      end;
 
-    if rttiProperty.IsEnum then
-    begin
-      enumValue := GetEnumValue(rttiProperty.GetValue(AObject).TypeInfo, jsonValue.Value);
-      rttiProperty.SetValue(AObject,
-        TValue.FromOrdinal(rttiProperty.GetValue(AObject).TypeInfo, enumValue));
-      Continue;
-    end;
+      if rttiProperty.IsEnum then
+      begin
+        if jsonValue.Value.Trim.IsEmpty then
+          Continue;
+        enumValue := GetEnumValue(rttiProperty.GetValue(AObject).TypeInfo, jsonValue.Value);
+        rttiProperty.SetValue(AObject,
+          TValue.FromOrdinal(rttiProperty.GetValue(AObject).TypeInfo, enumValue));
+        Continue;
+      end;
 
-    if rttiProperty.IsObject then
-    begin
-      JsonObjectToObject(rttiProperty.GetValue(AObject).AsObject, TJSONObject(jsonValue));
-      Continue;
-    end;
+      if rttiProperty.IsObject then
+      begin
+        JsonObjectToObject(rttiProperty.GetValue(AObject).AsObject, TJSONObject(jsonValue));
+        Continue;
+      end;
 
-    if rttiProperty.IsFloat then
-    begin
-      rttiProperty.SetValue(AObject, TValue.From<Double>(jsonValue.Value.ToDouble));
-      Continue;
-    end;
+      if rttiProperty.IsFloat then
+      begin
+        rttiProperty.SetValue(AObject, TValue.From<Double>(jsonValue.Value.ToDouble));
+        Continue;
+      end;
 
-    if rttiProperty.IsDateTime then
-    begin
-      date.fromIso8601ToDateTime(jsonValue.Value);
-      rttiProperty.SetValue(AObject, TValue.From<TDateTime>(date));
-      Continue;
-    end;
+      if rttiProperty.IsDateTime then
+      begin
+        date.fromIso8601ToDateTime(jsonValue.Value);
+        rttiProperty.SetValue(AObject, TValue.From<TDateTime>(date));
+        Continue;
+      end;
 
-    if rttiProperty.IsList then
-    begin
-      jsonObjectToObjectList(AObject, TJSONArray(jsonValue), rttiProperty);
-      Continue;
-    end;
+      if rttiProperty.IsList then
+      begin
+        jsonObjectToObjectList(AObject, TJSONArray(jsonValue), rttiProperty);
+        Continue;
+      end;
 
-    if rttiProperty.IsBoolean then
-    begin
-      boolValue := jsonValue.Value.ToLower.Equals('true');
-      rttiProperty.SetValue(AObject, TValue.From<Boolean>(boolValue));
-      Continue;
+      if rttiProperty.IsBoolean then
+      begin
+        boolValue := jsonValue.Value.ToLower.Equals('true');
+        rttiProperty.SetValue(AObject, TValue.From<Boolean>(boolValue));
+        Continue;
+      end;
+    except
+      on e : Exception do
+      begin
+        e.Message := Format('Error on read property %s from json: %s', [ rttiProperty.Name, e.message ]);
+        raise;
+      end;
     end;
   end;
 end;
