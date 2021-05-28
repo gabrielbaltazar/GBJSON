@@ -24,6 +24,9 @@ type TGBJSONTestSerializePerson = class
 
     function GetJsonObject(APerson: TPerson): TJSONObject;
   public
+    constructor create;
+    destructor  Destroy; override;
+
     [Setup]    procedure Setup;
     [TearDown] procedure TearDown;
 
@@ -32,6 +35,7 @@ type TGBJSONTestSerializePerson = class
     [Test] procedure TestStringWithAccent;
     [Test] procedure TestStringWithBar;
     [Test] procedure TestStringWithBackslash;
+    [Test] procedure TestStringWithDoubleQuotes;
 
     [Test] procedure TestIntegerPositive;
     [Test] procedure TestIntegerEmpty;
@@ -72,8 +76,6 @@ type TGBJSONTestSerializePerson = class
     [Test] procedure TestArrayStringEmpty;
     [Test] procedure TestArrayStringOneElement;
 
-    constructor create;
-    destructor  Destroy; override;
 end;
 
 implementation
@@ -437,6 +439,17 @@ begin
   Assert.AreEqual(FPerson.name, FAuxPerson.name);
 end;
 
+procedure TGBJSONTestSerializePerson.TestStringWithDoubleQuotes;
+begin
+  FPerson.name := 'Name With "Quotes"';
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsNotNull(FAuxPerson);
+  Assert.AreEqual(FPerson.name, FAuxPerson.name);
+  Assert.AreEqual('Name With "Quotes"', FAuxPerson.name);
+end;
+
 procedure TGBJSONTestSerializePerson.TestStringWithBackslash;
 begin
   FPerson.name := 'Value 1 \ Value 2';
@@ -445,6 +458,7 @@ begin
   FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPerson);
   Assert.AreEqual(FPerson.name, FAuxPerson.name);
+  Assert.AreEqual('Value 1 \ Value 2', FAuxPerson.name);
 end;
 
 procedure TGBJSONTestSerializePerson.TestStringEmpty;

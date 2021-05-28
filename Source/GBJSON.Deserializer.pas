@@ -213,7 +213,7 @@ begin
   value := AProperty.GetValue(AObject);
 
   if AProperty.IsString then
-    Exit('"' + Value.AsString.Replace('\', '\\') + '"');
+    Exit('"' + Value.AsString.Replace('\', '\\').Replace('"', '\"') + '"');
 
   if AProperty.IsInteger then
     Exit(value.AsInteger.ToString);
@@ -235,7 +235,7 @@ begin
     for i := 0 to Pred(value.GetArrayLength) do
     begin
       if listType.TypeKind.IsString then
-        result := result + '"' + value.GetArrayElement(i).AsString + '"'
+        result := result + '"' + value.GetArrayElement(i).AsString.Replace('"', '\"') + '"'
       else
       if listType.TypeKind.IsInteger then
         result := Result + value.GetArrayElement(i).AsInteger.ToString
@@ -278,7 +278,7 @@ begin
       result := '"' + result + '"';
       Exit;
     end;
-    Exit('"' + VartoStrDef(value.AsVariant, '') + '"')
+    Exit('"' + VartoStrDef(value.AsVariant, '').Replace('"', '\"') + '"')
   end;
 end;
 

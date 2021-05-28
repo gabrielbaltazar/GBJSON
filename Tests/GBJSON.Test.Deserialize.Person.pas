@@ -31,6 +31,7 @@ type TGBJSONTestDeserializePerson = class
     [Test] procedure TestStringWithAccent;
     [Test] procedure TestStringWithBar;
     [Test] procedure TestStringWithBackslash;
+    [Test] procedure TestStringWithDoubleQuotes;
 
     [Test] procedure TestIntegerPositive;
     [Test] procedure TestIntegerEmpty;
@@ -442,6 +443,17 @@ begin
   FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPerson);
   Assert.AreEqual(FPerson.name, FAuxPerson.name);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestStringWithDoubleQuotes;
+begin
+  FPerson.name := 'Name With "Quotes"';
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsNotNull(FAuxPerson);
+  Assert.AreEqual(FPerson.name, FAuxPerson.name);
+  Assert.AreEqual('Name With "Quotes"', FAuxPerson.name);
 end;
 
 procedure TGBJSONTestDeserializePerson.TestStringWithBackslash;
