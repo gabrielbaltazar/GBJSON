@@ -41,10 +41,12 @@ type
     Factive: Boolean;
     Fnotes: TList<Double>;
     Fqualities: TArray<String>;
+    Fdocument_number: String;
   public
     property qualities: TArray<String> read Fqualities write Fqualities;
     property idPerson: Double read FidPerson write FidPerson;
     property name: string read Fname write Fname;
+    property document_number: String read Fdocument_number write Fdocument_number;
     property age: Integer read Fage write Fage;
     property creationDate: TDateTime read FcreationDate write FcreationDate;
     property average: Double read Faverage write Faverage;

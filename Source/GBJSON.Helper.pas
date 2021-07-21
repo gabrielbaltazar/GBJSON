@@ -6,7 +6,8 @@ uses
   System.SysUtils,
   System.Classes,
   System.JSON,
-  {$IF CompilerVersion <= 32.0}
+  System.Generics.Collections,
+  {$IF CompilerVersion <= 34.0}
   REST.Json,
   {$ENDIF}
   GBJSON.DateTime.Helper,

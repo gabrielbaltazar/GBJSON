@@ -61,6 +61,8 @@ type TGBJSONTestSerializePerson = class
 
     [Test] procedure TestObjectLowerCase;
     [Test] procedure TestObjectUpperCase;
+    [Test] procedure TestObjectUnderlineProperty;
+
 
     [Test] procedure TestObjectListFill;
     [Test] procedure TestObjectListEmpty;
@@ -389,6 +391,23 @@ begin
   FAuxPerson  := FSerialize.JsonObjectToObject(FJSONObject);
 
   Assert.IsEmpty(FAuxPerson.address.street);
+end;
+
+procedure TGBJSONTestSerializePerson.TestObjectUnderlineProperty;
+begin
+  FreeAndNil(FPerson);
+  FreeAndNil(FJSONObject);
+  FJSONObject := TJSONObject.Create;
+  FJSONObject
+    .AddPair('document_number', '123456');
+
+  TGBJSONConfig.GetInstance
+    .CaseDefinition(TCaseDefinition.cdNone);
+
+  FPerson := TPerson.Create;
+  FPerson.fromJSONObject(FJSONObject);
+
+  Assert.AreEqual('123456', FPerson.document_number);
 end;
 
 procedure TGBJSONTestSerializePerson.TestObjectUpperCase;

@@ -8,6 +8,7 @@ uses
   GBJSON.Interfaces,
   GBJSON.Deserializer,
   GBJSON.Serializer,
+  GBJSON.Helper,
   System.JSON,
   System.SysUtils;
 
@@ -57,6 +58,7 @@ type TGBJSONTestDeserializePerson = class
 
     [Test] procedure TestObjectLowerCase;
     [Test] procedure TestObjectUpperCase;
+    [Test] procedure TestObjectUnderlineProperty;
 
     [Test] procedure TestObjectListFill;
     [Test] procedure TestObjectListEmpty;
@@ -398,6 +400,21 @@ begin
   FAuxPerson  := FSerialize.JsonObjectToObject(FJSONObject);
 
   Assert.IsEmpty(FAuxPerson.address.street);
+end;
+
+procedure TGBJSONTestDeserializePerson.TestObjectUnderlineProperty;
+begin
+  FreeAndNil(FJSONObject);
+  TGBJSONConfig.GetInstance
+    .CaseDefinition(TCaseDefinition.cdNone);
+
+  FPerson.document_number := '123456';
+
+  FJSONObject := TGBJSONDefault.Deserializer<TUpperPerson>
+                    .ObjectToJsonObject(FPerson);
+
+  Assert.IsNotNull(FJSONObject.GetValue('document_number'));
+  Assert.AreEqual('123456', FJSONObject.ValueAsString('document_number'));
 end;
 
 procedure TGBJSONTestDeserializePerson.TestObjectUpperCase;
