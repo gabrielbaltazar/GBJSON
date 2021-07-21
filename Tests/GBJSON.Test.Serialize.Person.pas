@@ -24,6 +24,9 @@ type TGBJSONTestSerializePerson = class
 
     function GetJsonObject(APerson: TPerson): TJSONObject;
   public
+    constructor create;
+    destructor  Destroy; override;
+
     [Setup]    procedure Setup;
     [TearDown] procedure TearDown;
 
@@ -32,6 +35,7 @@ type TGBJSONTestSerializePerson = class
     [Test] procedure TestStringWithAccent;
     [Test] procedure TestStringWithBar;
     [Test] procedure TestStringWithBackslash;
+    [Test] procedure TestStringWithDoubleQuotes;
 
     [Test] procedure TestIntegerPositive;
     [Test] procedure TestIntegerEmpty;
@@ -57,14 +61,23 @@ type TGBJSONTestSerializePerson = class
 
     [Test] procedure TestObjectLowerCase;
     [Test] procedure TestObjectUpperCase;
+    [Test] procedure TestObjectUnderlineProperty;
+
 
     [Test] procedure TestObjectListFill;
     [Test] procedure TestObjectListEmpty;
     [Test] procedure TestObjectListOneElement;
     [Test] procedure TestObjectListNull;
 
-    constructor create;
-    destructor  Destroy; override;
+    [Test] procedure TestListFloatFill;
+    [Test] procedure TestListFloatEmpty;
+    [Test] procedure TestListFloatOneElement;
+    [Test] procedure TestListFloatNull;
+
+    [Test] procedure TestArrayStringFill;
+    [Test] procedure TestArrayStringEmpty;
+    [Test] procedure TestArrayStringOneElement;
+
 end;
 
 implementation
@@ -102,6 +115,35 @@ begin
   FreeAndNil(FUpperPerson);
   FreeAndNil(FPerson);
   FreeAndNil(FAuxPerson);
+end;
+
+procedure TGBJSONTestSerializePerson.TestArrayStringEmpty;
+begin
+  FPerson.qualities := [];
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (Length( FAuxPerson.qualities) = 0);
+end;
+
+procedure TGBJSONTestSerializePerson.TestArrayStringFill;
+begin
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.AreEqual(2, Length( FAuxPerson.qualities));
+  Assert.AreEqual('q1', FAuxPerson.qualities[0]);
+  Assert.AreEqual('q2', FAuxPerson.qualities[1]);
+end;
+
+procedure TGBJSONTestSerializePerson.TestArrayStringOneElement;
+begin
+  FPerson.qualities := ['q1'];
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.AreEqual(1, Length( FAuxPerson.qualities));
+  Assert.AreEqual('q1', FAuxPerson.qualities[0]);
 end;
 
 procedure TGBJSONTestSerializePerson.TestBooleanFalse;
@@ -223,6 +265,48 @@ begin
   Assert.AreEqual(FPerson.age, FAuxPerson.age);
 end;
 
+procedure TGBJSONTestSerializePerson.TestListFloatEmpty;
+begin
+  FPerson.notes.Clear;
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsTrue (FAuxPerson.notes.Count = 0);
+end;
+
+procedure TGBJSONTestSerializePerson.TestListFloatFill;
+begin
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.AreEqual(2, FAuxPerson.notes.Count);
+  Assert.AreEqual('5', FAuxPerson.notes[0].ToString);
+  Assert.AreEqual('6', FAuxPerson.notes[1].ToString);
+end;
+
+procedure TGBJSONTestSerializePerson.TestListFloatNull;
+begin
+  FPerson.notes.Free;
+  FPerson.notes := nil;
+
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.AreEqual(0, FAuxPerson.notes.Count);
+end;
+
+procedure TGBJSONTestSerializePerson.TestListFloatOneElement;
+begin
+  FPerson.notes.Clear;
+  FPerson.notes.Add(1);
+
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.AreEqual(1, FAuxPerson.notes.Count);
+  Assert.AreEqual('1', FAuxPerson.notes[0].ToString);
+end;
+
 procedure TGBJSONTestSerializePerson.TestIntegerEmpty;
 begin
   FPerson.age := 0;
@@ -309,6 +393,23 @@ begin
   Assert.IsEmpty(FAuxPerson.address.street);
 end;
 
+procedure TGBJSONTestSerializePerson.TestObjectUnderlineProperty;
+begin
+  FreeAndNil(FPerson);
+  FreeAndNil(FJSONObject);
+  FJSONObject := TJSONObject.Create;
+  FJSONObject
+    .AddPair('document_number', '123456');
+
+  TGBJSONConfig.GetInstance
+    .CaseDefinition(TCaseDefinition.cdNone);
+
+  FPerson := TPerson.Create;
+  FPerson.fromJSONObject(FJSONObject);
+
+  Assert.AreEqual('123456', FPerson.document_number);
+end;
+
 procedure TGBJSONTestSerializePerson.TestObjectUpperCase;
 begin
   FreeAndNil(FPerson);
@@ -357,6 +458,17 @@ begin
   Assert.AreEqual(FPerson.name, FAuxPerson.name);
 end;
 
+procedure TGBJSONTestSerializePerson.TestStringWithDoubleQuotes;
+begin
+  FPerson.name := 'Name With "Quotes"';
+  FJSONObject := GetJsonObject(FPerson);
+
+  FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
+  Assert.IsNotNull(FAuxPerson);
+  Assert.AreEqual(FPerson.name, FAuxPerson.name);
+  Assert.AreEqual('Name With "Quotes"', FAuxPerson.name);
+end;
+
 procedure TGBJSONTestSerializePerson.TestStringWithBackslash;
 begin
   FPerson.name := 'Value 1 \ Value 2';
@@ -365,6 +477,7 @@ begin
   FAuxPerson := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPerson);
   Assert.AreEqual(FPerson.name, FAuxPerson.name);
+  Assert.AreEqual('Value 1 \ Value 2', FAuxPerson.name);
 end;
 
 procedure TGBJSONTestSerializePerson.TestStringEmpty;

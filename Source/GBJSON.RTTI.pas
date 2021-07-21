@@ -5,6 +5,7 @@ interface
 uses
   System.Rtti,
   System.SysUtils,
+  System.TypInfo,
   GBJSON.Config,
   GBJSON.Attributes;
 
@@ -32,6 +33,16 @@ type
       destructor  Destroy; override;
   end;
 
+  TTypeKindHelper = record helper for TTypeKind
+  public
+    function IsString   : Boolean;
+    function IsInteger  : Boolean;
+    function IsArray    : Boolean;
+    function IsObject   : Boolean;
+    function IsFloat    : Boolean;
+    function IsVariant  : Boolean;
+  end;
+
   TGBRTTITypeHelper = class helper for TRttiType
     public
       function IsList: Boolean;
@@ -50,13 +61,13 @@ type
       function IsBoolean  : Boolean;
       function IsVariant  : Boolean;
 
+      function JSONName: String;
+
       function GetAttribute<T: TCustomAttribute>: T;
 
       function IsEmpty(AObject: TObject): Boolean;
-
       function IsIgnore(AClass: TClass): Boolean;
-
-      function JSONName: String;
+      function IsReadOnly: Boolean;
 
       function GetListType(AObject: TObject): TRttiType;
   end;
@@ -138,11 +149,17 @@ var
   ListType     : TRttiType;
   ListTypeName : string;
 begin
-  ListType := TGBRTTI.GetInstance.GetType(Self.GetValue(AObject).AsObject.ClassType);
-  ListTypeName := ListType.ToString;
+  if not Self.GetValue(AObject).IsArray then
+  begin
+    ListType := TGBRTTI.GetInstance.GetType(Self.GetValue(AObject).AsObject.ClassType);
+    ListTypeName := ListType.ToString;
+  end
+  else
+    ListTypeName := Self.PropertyType.ToString;
 
   ListTypeName := ListTypeName.Replace('TObjectList<', EmptyStr);
   ListTypeName := ListTypeName.Replace('TList<', EmptyStr);
+  ListTypeName := ListTypeName.Replace('TArray<', EmptyStr);
   ListTypeName := ListTypeName.Replace('>', EmptyStr);
 
   result := TGBRTTI.GetInstance.FindType(ListTypeName);
@@ -150,8 +167,7 @@ end;
 
 function TGBRTTIPropertyHelper.IsArray: Boolean;
 begin
-  Result := Self.PropertyType.TypeKind in
-    [tkSet, tkArray, tkDynArray]
+  Result := Self.PropertyType.TypeKind.IsArray;
 end;
 
 function TGBRTTIPropertyHelper.IsBoolean: Boolean;
@@ -181,7 +197,7 @@ begin
   if (Self.IsObject) and (Self.GetValue(AObject).AsObject = nil) then
     Exit(True);
 
-  if (Self.IsArray) and (Self.GetValue(AObject).GetArrayLength = 0) then
+  if (Self.IsArray) and ((Self.GetValue(AObject).IsEmpty) or (Self.GetValue(AObject).GetArrayLength = 0)) then
     Exit(True);
 
   if (Self.IsList) then
@@ -205,7 +221,7 @@ end;
 
 function TGBRTTIPropertyHelper.IsFloat: Boolean;
 begin
-  result := (Self.PropertyType.TypeKind = tkFloat) and (not IsDateTime);
+  result := (Self.PropertyType.TypeKind.IsFloat) and (not IsDateTime);
 end;
 
 function TGBRTTIPropertyHelper.IsIgnore(AClass: TClass): Boolean;
@@ -239,7 +255,7 @@ end;
 
 function TGBRTTIPropertyHelper.IsInteger: Boolean;
 begin
-  result := Self.PropertyType.TypeKind in [tkInt64, tkInteger];
+  result := Self.PropertyType.TypeKind.IsInteger;
 end;
 
 function TGBRTTIPropertyHelper.IsList: Boolean;
@@ -255,34 +271,43 @@ end;
 
 function TGBRTTIPropertyHelper.IsObject: Boolean;
 begin
-  result := (not IsList) and (Self.PropertyType.TypeKind = tkClass);
+  result := (not IsList) and (Self.PropertyType.TypeKind.IsObject);
+end;
+
+function TGBRTTIPropertyHelper.IsReadOnly: Boolean;
+var
+  prop : JSONProp;
+begin
+  result := False;
+  prop := GetAttribute<JSONProp>;
+  if Assigned(prop) then
+    result := prop.readOnly;
 end;
 
 function TGBRTTIPropertyHelper.IsString: Boolean;
 begin
-  result := Self.PropertyType.TypeKind in
-    [tkChar,
-     tkString,
-     tkWChar,
-     tkLString,
-     tkWString,
-     tkUString];
+  result := Self.PropertyType.TypeKind.IsString;
 end;
 
 function TGBRTTIPropertyHelper.IsVariant: Boolean;
 begin
-  result := Self.PropertyType.TypeKind = tkVariant;
+  result := Self.PropertyType.TypeKind.IsVariant;
 end;
 
 function TGBRTTIPropertyHelper.JSONName: String;
 var
   I: Integer;
   LField: TArray<Char>;
+  prop : JSONProp;
 begin
+  result := Self.Name;
+  prop := GetAttribute<JSONProp>;
+  if (Assigned(prop)) and (not prop.name.IsEmpty) then
+    result := prop.name;
+
   case TGBJSONConfig.GetInstance.CaseDefinition of
-    cdNone : result := Self.Name;
-    cdLower: result := Self.Name.ToLower;
-    cdUpper: result := Self.Name.ToUpper;
+    cdLower: result := result.ToLower;
+    cdUpper: result := result.ToUpper;
 
     cdLowerCamelCase: begin
       // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
@@ -325,6 +350,9 @@ function TGBObjectHelper.GetPropertyValue(Name: String): TValue;
 var
   rttiProp: TRttiProperty;
 begin
+  if not Assigned(Self) then
+    Exit(nil);
+
   rttiProp := TGBRTTI.GetInstance.GetType(Self.ClassType)
                 .GetProperty(Name);
 
@@ -355,6 +383,45 @@ begin
 
   if Assigned(ignore) then
     result := ignore.IgnoreProperties;
+end;
+
+{ TTypeKindHelper }
+
+function TTypeKindHelper.IsArray: Boolean;
+begin
+  Result := Self in
+    [tkSet, tkArray, tkDynArray]
+end;
+
+function TTypeKindHelper.IsFloat: Boolean;
+begin
+  result := Self = tkFloat;
+end;
+
+function TTypeKindHelper.IsInteger: Boolean;
+begin
+  result := Self in [tkInt64, tkInteger];
+end;
+
+function TTypeKindHelper.IsObject: Boolean;
+begin
+  result := Self = tkClass;
+end;
+
+function TTypeKindHelper.IsString: Boolean;
+begin
+  result := Self in
+    [tkChar,
+     tkString,
+     tkWChar,
+     tkLString,
+     tkWString,
+     tkUString];
+end;
+
+function TTypeKindHelper.IsVariant: Boolean;
+begin
+  result := Self = tkVariant;
 end;
 
 end.

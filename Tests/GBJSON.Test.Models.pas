@@ -13,18 +13,18 @@ type
   private
     FidTel: Double;
     Fnumber: string;
-    public
-      property idTel: Double read FidTel write FidTel;
-      property number: string read Fnumber write Fnumber;
+  public
+    property idTel: Double read FidTel write FidTel;
+    property number: string read Fnumber write Fnumber;
   end;
 
   TAddress = class
   private
     FidAddress: string;
     Fstreet: string;
-    public
-      property idAddress: string read FidAddress write FidAddress;
-      property street: string read Fstreet write Fstreet;
+  public
+    property idAddress: string read FidAddress write FidAddress;
+    property street: string read Fstreet write Fstreet;
   end;
 
   TPerson = class
@@ -39,22 +39,28 @@ type
     Fobs: String;
     Faverage: Double;
     Factive: Boolean;
-    public
-      property idPerson: Double read FidPerson write FidPerson;
-      property name: string read Fname write Fname;
-      property age: Integer read Fage write Fage;
-      property creationDate: TDateTime read FcreationDate write FcreationDate;
-      property average: Double read Faverage write Faverage;
-      property active: Boolean read Factive write Factive;
-      property obs: String read Fobs write Fobs;
-      property address: TAddress read Faddress write Faddress;
-      property personType: TPersonType read FpersonType write FpersonType;
-      property phones: TObjectList<TPhone> read Fphones write Fphones;
+    Fnotes: TList<Double>;
+    Fqualities: TArray<String>;
+    Fdocument_number: String;
+  public
+    property qualities: TArray<String> read Fqualities write Fqualities;
+    property idPerson: Double read FidPerson write FidPerson;
+    property name: string read Fname write Fname;
+    property document_number: String read Fdocument_number write Fdocument_number;
+    property age: Integer read Fage write Fage;
+    property creationDate: TDateTime read FcreationDate write FcreationDate;
+    property average: Double read Faverage write Faverage;
+    property active: Boolean read Factive write Factive;
+    property obs: String read Fobs write Fobs;
+    property address: TAddress read Faddress write Faddress;
+    property personType: TPersonType read FpersonType write FpersonType;
+    property phones: TObjectList<TPhone> read Fphones write Fphones;
+    property notes: TList<Double> read Fnotes write Fnotes;
 
-      class function CreatePerson: TPerson;
+    class function CreatePerson: TPerson;
 
-      constructor create;
-      destructor  Destroy; override;
+    constructor create;
+    destructor  Destroy; override;
   end;
 
   TUpperPerson = class
@@ -77,6 +83,7 @@ begin
   FpersonType := tpFisica;
   Faddress   := TAddress.Create;
   Fphones  := TObjectList<TPhone>.Create;
+  Fnotes   := TList<Double>.create;
   Factive      := False;
 end;
 
@@ -97,12 +104,17 @@ begin
   Result.phones.Add(TPhone.Create);
   Result.phones.Last.idTel := 4;
   Result.phones.Last.number := '11111111';
+
+  Result.notes.AddRange([5, 6]);
+
+  Result.qualities := ['q1', 'q2'];
 end;
 
 destructor TPerson.Destroy;
 begin
   Faddress.Free;
   Fphones.Free;
+  Fnotes.Free;
   inherited;
 end;
 
