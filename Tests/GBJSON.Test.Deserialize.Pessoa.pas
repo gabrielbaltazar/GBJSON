@@ -5,8 +5,7 @@ interface
 uses
   DUnitX.TestFramework,
   GBJSON.Test.Models,
-  GBJSON.Deserializer,
-  GBJSON.Serializer,
+  GBJSON.Interfaces,
   System.JSON,
   System.SysUtils;
 
@@ -15,8 +14,8 @@ type TGBJSONTestDeserializePessoa = class
   private
     FPessoa      : TPessoa;
     FAuxPessoa   : TPessoa;
-    FDeserialize : TGBJSONDeserializer;
-    FSerialize   : TGBJSONSerializer;
+    FDeserialize : IGBJSONDeserializer<TPessoa>;
+    FSerialize   : IGBJSONSerializer<TPessoa>;
     FJSONObject  : TJSONObject;
 
     function GetJsonObject(APessoa: TPessoa): TJSONObject;
@@ -67,21 +66,19 @@ implementation
 
 constructor TGBJSONTestDeserializePessoa.create;
 begin
-  FDeserialize := TGBJSONDeserialize.create;
-  FSerialize   := TGBJSONSerialize.create;
+  FDeserialize := TGBJSONDefault.Deserializer<TPessoa>;
+  FSerialize   := TGBJSONDefault.Serializer<TPessoa>;
 end;
 
 destructor TGBJSONTestDeserializePessoa.Destroy;
 begin
-  FDeserialize.Free;
-  FSerialize.Free;
   inherited;
 end;
 
 function TGBJSONTestDeserializePessoa.GetJsonObject(APessoa: TPessoa): TJSONObject;
 begin
   FreeAndNil(FJSONObject);
-  FJSONObject := FSerialize.ObjectToJsonObject(APessoa);
+  FJSONObject := FDeserialize.ObjectToJsonObject(APessoa);
 
   result := FJSONObject;
 end;
@@ -104,7 +101,7 @@ begin
   FPessoa.ativo := False;
   FJSONObject   := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsFalse(FAuxPessoa.ativo);
 end;
 
@@ -113,7 +110,7 @@ begin
   FPessoa.ativo := True;
   FJSONObject   := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsTrue(FAuxPessoa.ativo);
 end;
 
@@ -123,7 +120,7 @@ begin
   FJSONObject   := GetJsonObject(FPessoa);
   FJSONObject.RemovePair('ativo');
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsFalse(FAuxPessoa.ativo);
 end;
 
@@ -132,7 +129,7 @@ begin
   FPessoa.dataCadastro := Now;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FormatDateTime('yyyy-MM-dd hh:mm:ss', FPessoa.dataCadastro),
                   FormatDateTime('yyyy-MM-dd hh:mm:ss', FAuxPessoa.dataCadastro));
 end;
@@ -142,7 +139,7 @@ begin
   FPessoa.dataCadastro := 0;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.dataCadastro, FAuxPessoa.dataCadastro);
 end;
 
@@ -151,7 +148,7 @@ begin
   FPessoa.tipoPessoa := tpJuridica;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.tipoPessoa, FAuxPessoa.tipoPessoa);
 end;
 
@@ -160,7 +157,7 @@ begin
   FPessoa.media := -5;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.media, FAuxPessoa.media);
 end;
 
@@ -169,7 +166,7 @@ begin
   FPessoa.media := -5.25;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.media, FAuxPessoa.media);
 end;
 
@@ -178,7 +175,7 @@ begin
   FPessoa.media := 15;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.media, FAuxPessoa.media);
 end;
 
@@ -187,7 +184,7 @@ begin
   FPessoa.media := 15.351;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.media, FAuxPessoa.media);
 end;
 
@@ -196,7 +193,7 @@ begin
   FPessoa.media := 0;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsTrue(FAuxPessoa.media = 0);
 end;
 
@@ -205,7 +202,7 @@ begin
   FPessoa.idade := -5;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.idade, FAuxPessoa.idade);
 end;
 
@@ -214,7 +211,7 @@ begin
   FPessoa.idade := 50;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.idade, FAuxPessoa.idade);
 end;
 
@@ -223,7 +220,7 @@ begin
   FPessoa.idade := 0;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.idade, FAuxPessoa.idade);
 end;
 
@@ -231,7 +228,7 @@ procedure TGBJSONTestDeserializePessoa.TestObjectListCheio;
 begin
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsTrue (FAuxPessoa.telefones.Count > 0);
   Assert.IsFalse(FAuxPessoa.telefones[0].numero.IsEmpty);
 
@@ -246,7 +243,7 @@ begin
 
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPessoa.telefones);
   Assert.IsTrue (FAuxPessoa.telefones.Count = 0);
 end;
@@ -256,7 +253,7 @@ begin
   FPessoa.telefones.Remove(FPessoa.telefones[1]);
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsTrue (FAuxPessoa.telefones.Count = 1);
   Assert.IsFalse(FAuxPessoa.telefones[0].numero.IsEmpty);
 
@@ -271,7 +268,7 @@ begin
 
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsTrue (FAuxPessoa.telefones.Count = 0);
 end;
 
@@ -281,7 +278,7 @@ begin
   FPessoa.endereco := nil;
 
   FJSONObject := GetJsonObject(FPessoa);
-  FAuxPessoa  := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa  := FSerialize.JsonObjectToObject(FJSONObject);
 
   Assert.IsEmpty(FAuxPessoa.endereco.logradouro);
 end;
@@ -291,7 +288,7 @@ begin
   FPessoa.endereco.logradouro := 'Rua Tal';
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.AreEqual(FPessoa.endereco.logradouro, FAuxPessoa.endereco.logradouro);
 end;
 
@@ -300,7 +297,7 @@ begin
   FPessoa.nome := 'Tomé';
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPessoa);
   Assert.AreEqual(FPessoa.nome, FAuxPessoa.nome);
 end;
@@ -310,7 +307,7 @@ begin
   FPessoa.nome := 'Value 1 / Value 2';
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPessoa);
   Assert.AreEqual(FPessoa.nome, FAuxPessoa.nome);
 end;
@@ -320,7 +317,7 @@ begin
   FPessoa.nome := 'Value 1 \ Value 2';
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPessoa);
   Assert.AreEqual(FPessoa.nome, FAuxPessoa.nome);
 end;
@@ -330,7 +327,7 @@ begin
   FPessoa.nome := EmptyStr;
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPessoa);
   Assert.AreEqual(FPessoa.nome, FAuxPessoa.nome);
 end;
@@ -340,7 +337,7 @@ begin
   FPessoa.nome := 'Value 1';
   FJSONObject := GetJsonObject(FPessoa);
 
-  FAuxPessoa := FDeserialize.JsonObjectToObject<TPessoa>(FJSONObject);
+  FAuxPessoa := FSerialize.JsonObjectToObject(FJSONObject);
   Assert.IsNotNull(FAuxPessoa);
   Assert.AreEqual(FPessoa.nome, FAuxPessoa.nome);
 end;

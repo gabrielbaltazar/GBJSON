@@ -178,7 +178,7 @@ begin
   if (Self.IsObject) and (Self.GetValue(AObject).AsObject = nil) then
     Exit(True);
 
-  if (Self.IsArray) and (Self.GetValue(AObject).GetArrayLength = 0) then
+  if (Self.IsArray) and ((Self.GetValue(AObject).IsEmpty) or (Self.GetValue(AObject).GetArrayLength = 0)) then
     Exit(True);
 
   if (Self.IsList) then

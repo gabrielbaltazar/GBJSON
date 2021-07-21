@@ -6,15 +6,16 @@ uses
   DUnitX.TestFramework,
   GBJSON.Test.Models,
   GBJSON.DateTime.Helper,
-  GBJSON.Serialize,
+  GBJSON.Interfaces,
   System.JSON,
+  System.Generics.Collections,
   System.SysUtils;
 
 type TGBJSONTestSerializePessoa = class
 
   private
     FPessoa     : TPessoa;
-    FSerialize  : TGBJSONSerialize;
+    FDeserialize: IGBJSONDeserializer<TPessoa>;
     FJSONObject : TJSONObject;
 
     function GetJsonObject(APessoa: TPessoa): TJSONObject;
@@ -66,19 +67,18 @@ implementation
 
 constructor TGBJSONTestSerializePessoa.create;
 begin
-  FSerialize := TGBJSONSerialize.create;
+  FDeserialize := TGBJSONDefault.Deserializer<TPessoa>;
 end;
 
 destructor TGBJSONTestSerializePessoa.Destroy;
 begin
-  FSerialize.Free;
   inherited;
 end;
 
 function TGBJSONTestSerializePessoa.GetJsonObject(APessoa: TPessoa): TJSONObject;
 begin
   FreeAndNil(FJSONObject);
-  FJSONObject := FSerialize.ObjectToJsonObject(APessoa);
+  FJSONObject := FDeserialize.ObjectToJsonObject(APessoa);
 
   result := FJSONObject;
 end;
@@ -139,7 +139,7 @@ end;
 procedure TGBJSONTestSerializePessoa.TestEnumString;
 begin
   FPessoa.tipoPessoa := TTipoPessoa.tpJuridica;
-  FJSONObject        := FSerialize.ObjectToJsonObject(FPessoa);
+  FJSONObject        := FDeserialize.ObjectToJsonObject(FPessoa);
 
   Assert.AreEqual('tpJuridica', FJSONObject.Values['tipoPessoa'].Value);
 end;
