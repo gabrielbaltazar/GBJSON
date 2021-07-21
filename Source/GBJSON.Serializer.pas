@@ -62,78 +62,115 @@ end;
 
 procedure TGBJSONSerializer<T>.jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
 var
-  rttiProperty: TRttiProperty;
-  jsonValue   : TJSONValue;
-  date        : TDateTime;
-  enumValue   : Integer;
-  boolValue   : Boolean;
+  rttiProperty : TRttiProperty;
+  rttiType     : TRttiType;
+  rttiValues   : TArray<TValue>;
+  jsonValue    : TJSONValue;
+  date         : TDateTime;
+  enumValue    : Integer;
+  boolValue    : Boolean;
+  value        : TValue;
+  i            : Integer;
 begin
   for rttiProperty in AType.GetProperties do
   begin
-    if (FUseIgnore) and (rttiProperty.IsIgnore(AObject.ClassType)) then
-      Continue;
+    try
+      if (FUseIgnore) and (rttiProperty.IsIgnore(AObject.ClassType)) then
+        Continue;
 
-    jsonValue := AJsonObject.Values[rttiProperty.Name];
+      jsonValue := AJsonObject.Values[rttiProperty.JSONName];
 
-    if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
-      Continue;
+      if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
+        Continue;
 
-    if rttiProperty.IsString then
-    begin
-      rttiProperty.SetValue(AObject, jsonValue.Value);
-      Continue;
-    end;
+      if rttiProperty.IsString then
+      begin
+        rttiProperty.SetValue(AObject, jsonValue.Value);
+        Continue;
+      end;
 
-    if rttiProperty.IsVariant then
-    begin
-      rttiProperty.SetValue(AObject, jsonValue.Value);
-      Continue;
-    end;
+      if rttiProperty.IsVariant then
+      begin
+        rttiProperty.SetValue(AObject, jsonValue.Value);
+        Continue;
+      end;
 
-    if rttiProperty.IsInteger then
-    begin
+      if rttiProperty.IsInteger then
+      begin
       rttiProperty.SetValue(AObject, StrToIntDef( jsonValue.Value, 0));
-      Continue;
-    end;
+        Continue;
+      end;
 
-    if rttiProperty.IsEnum then
-    begin
-      enumValue := GetEnumValue(rttiProperty.GetValue(AObject).TypeInfo, jsonValue.Value);
-      rttiProperty.SetValue(AObject,
-        TValue.FromOrdinal(rttiProperty.GetValue(AObject).TypeInfo, enumValue));
-      Continue;
-    end;
+      if rttiProperty.IsEnum then
+      begin
+        if jsonValue.Value.Trim.IsEmpty then
+          Continue;
+        enumValue := GetEnumValue(rttiProperty.GetValue(AObject).TypeInfo, jsonValue.Value);
+        rttiProperty.SetValue(AObject,
+          TValue.FromOrdinal(rttiProperty.GetValue(AObject).TypeInfo, enumValue));
+        Continue;
+      end;
 
-    if rttiProperty.IsObject then
-    begin
-      JsonObjectToObject(rttiProperty.GetValue(AObject).AsObject, TJSONObject(jsonValue));
-      Continue;
-    end;
+      if rttiProperty.IsObject then
+      begin
+        JsonObjectToObject(rttiProperty.GetValue(AObject).AsObject, TJSONObject(jsonValue));
+        Continue;
+      end;
 
-    if rttiProperty.IsFloat then
-    begin
+      if rttiProperty.IsFloat then
+      begin
       rttiProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(jsonValue.Value, 0)));
-      Continue;
-    end;
+        Continue;
+      end;
 
-    if rttiProperty.IsDateTime then
-    begin
-      date.fromIso8601ToDateTime(jsonValue.Value);
-      rttiProperty.SetValue(AObject, TValue.From<TDateTime>(date));
-      Continue;
-    end;
+      if rttiProperty.IsDateTime then
+      begin
+        date.fromIso8601ToDateTime(jsonValue.Value);
+        rttiProperty.SetValue(AObject, TValue.From<TDateTime>(date));
+        Continue;
+      end;
 
-    if rttiProperty.IsList then
-    begin
-      jsonObjectToObjectList(AObject, TJSONArray(jsonValue), rttiProperty);
-      Continue;
-    end;
+      if rttiProperty.IsList then
+      begin
+        jsonObjectToObjectList(AObject, TJSONArray(jsonValue), rttiProperty);
+        Continue;
+      end;
 
-    if rttiProperty.IsBoolean then
-    begin
-      boolValue := jsonValue.Value.ToLower.Equals('true');
-      rttiProperty.SetValue(AObject, TValue.From<Boolean>(boolValue));
-      Continue;
+      if rttiProperty.IsBoolean then
+      begin
+        boolValue := jsonValue.Value.ToLower.Equals('true');
+        rttiProperty.SetValue(AObject, TValue.From<Boolean>(boolValue));
+        Continue;
+      end;
+
+      if rttiProperty.IsArray then
+      begin
+        if (not Assigned(jsonValue)) or (not (jsonValue is TJSONArray)) then
+          Continue;
+
+        rttiType := rttiProperty.GetListType(AObject);
+        SetLength(rttiValues, TJSONArray(jsonValue).Count);
+        for i := 0 to Pred(TJSONArray(jsonValue).Count) do
+        begin
+          if rttiType.TypeKind.IsString then
+            rttiValues[i] := TValue.From<String>(TJSONArray(jsonValue).Items[i].Value)
+          else
+          if rttiType.TypeKind.IsInteger then
+            rttiValues[i] := TValue.From<Integer>(TJSONArray(jsonValue).Items[i].Value.ToInteger)
+          else
+          if rttiType.TypeKind.IsFloat then
+            rttiValues[i] := TValue.From<Double>(TJSONArray(jsonValue).Items[i].Value.ToDouble)
+        end;
+
+        rttiProperty.SetValue(AObject,
+            TValue.FromArray(rttiProperty.PropertyType.Handle, rttiValues));
+      end;
+    except
+      on e : Exception do
+      begin
+        e.Message := Format('Error on read property %s from json: %s', [ rttiProperty.Name, e.message ]);
+        raise;
+      end;
     end;
   end;
 end;
@@ -160,6 +197,7 @@ procedure TGBJSONSerializer<T>.jsonObjectToObjectList(AObject: TObject; AJsonArr
 var
   i          : Integer;
   objectItem : TObject;
+  value      : TValue;
   listType   : TRttiType;
 begin
   if not Assigned(AJsonArray) then
@@ -168,11 +206,27 @@ begin
   listType := AProperty.GetListType(AObject);
   for i := 0 to Pred(AJsonArray.Count) do
   begin
-    objectItem := listType.AsInstance.MetaclassType.Create;
-    objectItem.invokeMethod('create', []);
+    if listType.TypeKind.IsObject then
+    begin
+      objectItem := listType.AsInstance.MetaclassType.Create;
+      objectItem.invokeMethod('create', []);
 
-    Self.JsonObjectToObject(objectItem, TJSONObject(AJsonArray.Items[i]));
-    AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [objectItem]);
+      Self.JsonObjectToObject(objectItem, TJSONObject(AJsonArray.Items[i]));
+      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [objectItem]);
+    end
+    else
+    begin
+      if listType.TypeKind.IsString then
+        value := TValue.From<String>(AJsonArray.Items[i].GetValue<String>);
+
+      if listType.TypeKind.IsFloat then
+        value := TValue.From<Double>(AJsonArray.Items[i].GetValue<Double>);
+
+      if listType.TypeKind.IsInteger then
+        value := TValue.From<Integer>(AJsonArray.Items[i].GetValue<Integer>);
+
+      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [value]);
+    end;
   end;
 end;
 

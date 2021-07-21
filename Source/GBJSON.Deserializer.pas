@@ -162,6 +162,7 @@ var
   method  : TRttiMethod;
   value   : TValue;
   i       : Integer;
+  jsonValue: string;
 begin
   value := AProperty.GetValue(AObject);
 
@@ -178,7 +179,27 @@ begin
 
   result := '[';
   for i := 0 to value.GetArrayLength - 1 do
-    result := Result + ObjectToJsonString(value.GetArrayElement(i).AsObject) + ',';
+  begin
+    if value.GetArrayElement(i).IsObject then
+      result := Result + ObjectToJsonString(value.GetArrayElement(i).AsObject) + ','
+  	else
+    begin
+      rttiType := AProperty.GetListType(AObject);
+      jsonValue:= EmptyStr;
+
+      if rttiType.TypeKind.IsString then
+        jsonValue := value.GetArrayElement(i).AsString.QuotedString
+      else
+      if rttiType.TypeKind.IsInteger then
+        jsonValue := value.GetArrayElement(i).AsInteger.ToString
+      else
+      if rttiType.TypeKind.IsFloat then
+        jsonValue := value.GetArrayElement(i).AsExtended.ToString;
+
+      result := result + jsonValue + ',';
+    end;
+  end;
+  
   result[Length(Result)] := ']';
 end;
 
@@ -186,11 +207,13 @@ function TGBJSONDeserializer<T>.ValueToJson(AObject: TObject; AProperty: TRttiPr
 var
   value : TValue;
   data  : TDateTime;
+  listType: TRttiType;
+  i: Integer;
 begin
   value := AProperty.GetValue(AObject);
 
   if AProperty.IsString then
-    Exit('"' + Value.AsString.Replace('\', '\\') + '"');
+    Exit('"' + Value.AsString.Replace('\', '\\').Replace('"', '\"') + '"');
 
   if AProperty.IsInteger then
     Exit(value.AsInteger.ToString);
@@ -203,6 +226,28 @@ begin
 
   if AProperty.IsBoolean then
     Exit(IfThen(value.AsBoolean, 'true', 'false'));
+
+  if AProperty.IsArray then
+  begin
+    result := '[';
+
+    listType := AProperty.GetListType(AObject);
+    for i := 0 to Pred(value.GetArrayLength) do
+    begin
+      if listType.TypeKind.IsString then
+        result := result + '"' + value.GetArrayElement(i).AsString.Replace('"', '\"') + '"'
+      else
+      if listType.TypeKind.IsInteger then
+        result := Result + value.GetArrayElement(i).AsInteger.ToString
+      else
+      if listType.TypeKind.IsFloat then
+        result := Result + value.GetArrayElement(i).AsExtended.ToString;
+
+      result := result + ',';
+    end;
+
+    result[Length(Result)] := ']';
+  end;
 
   if AProperty.IsDateTime then
   begin
@@ -233,7 +278,7 @@ begin
       result := '"' + result + '"';
       Exit;
     end;
-    Exit('"' + VartoStrDef(value.AsVariant, '') + '"')
+    Exit('"' + VartoStrDef(value.AsVariant, '').Replace('"', '\"') + '"')
   end;
 end;
 
@@ -249,7 +294,7 @@ begin
        (not rttiProperty.IsEmpty(AObject))
     then
     begin
-      result := result + Format('"%s":', [rttiProperty.Name]);
+      result := result + Format('"%s":', [rttiProperty.JSONName]);
       result := result + ValueToJson(AObject, rttiProperty) + ',';
     end;
   end;

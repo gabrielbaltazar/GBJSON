@@ -13,8 +13,17 @@ uses
   DUnitX.TestFramework,
   GBJSON.Test.Register in 'GBJSON.Test.Register.pas',
   GBJSON.Test.Models in 'GBJSON.Test.Models.pas',
-  GBJSON.Test.Serialize.Pessoa in 'GBJSON.Test.Serialize.Pessoa.pas',
-  GBJSON.Test.Deserialize.Pessoa in 'GBJSON.Test.Deserialize.Pessoa.pas';
+  GBJSON.Test.Deserialize.Person in 'GBJSON.Test.Deserialize.Person.pas',
+  GBJSON.Test.Serialize.Person in 'GBJSON.Test.Serialize.Person.pas',
+  GBJSON.Attributes in '..\Source\GBJSON.Attributes.pas',
+  GBJSON.Base in '..\Source\GBJSON.Base.pas',
+  GBJSON.Config in '..\Source\GBJSON.Config.pas',
+  GBJSON.DateTime.Helper in '..\Source\GBJSON.DateTime.Helper.pas',
+  GBJSON.Deserializer in '..\Source\GBJSON.Deserializer.pas',
+  GBJSON.Helper in '..\Source\GBJSON.Helper.pas',
+  GBJSON.Interfaces in '..\Source\GBJSON.Interfaces.pas',
+  GBJSON.RTTI in '..\Source\GBJSON.RTTI.pas',
+  GBJSON.Serializer in '..\Source\GBJSON.Serializer.pas';
 
 var
   runner : ITestRunner;
@@ -29,6 +38,8 @@ begin
   exit;
 {$ENDIF}
   try
+    IsConsole := False;
+    ReportMemoryLeaksOnShutdown := True;
     //Check command line options, will exit if invalid
     TDUnitX.CheckCommandLine;
     //Create the test runner

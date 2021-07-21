@@ -4,8 +4,8 @@ interface
 
 uses
   DUnitX.TestFramework,
-  GBJSON.Test.Deserialize.Pessoa,
-  GBJSON.Test.Serialize.Pessoa;
+  GBJSON.Test.Deserialize.Person,
+  GBJSON.Test.Serialize.Person;
 
 procedure RegisterTestes;
 
@@ -13,8 +13,8 @@ implementation
 
 procedure RegisterTestes;
 begin
-  TDUnitX.RegisterTestFixture(TGBJSONTestSerializePessoa);
-  TDUnitX.RegisterTestFixture(TGBJSONTestDeserializePessoa);
+  TDUnitX.RegisterTestFixture(TGBJSONTestDeserializePerson);
+  TDUnitX.RegisterTestFixture(TGBJSONTestSerializePerson);
 end;
 
 initialization
