@@ -7,9 +7,7 @@ uses
   System.Classes,
   System.JSON,
   System.Generics.Collections,
-  {$IF CompilerVersion <= 34.0}
   REST.Json,
-  {$ENDIF}
   GBJSON.DateTime.Helper,
   GBJSON.Interfaces;
 
