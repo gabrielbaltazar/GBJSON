@@ -337,7 +337,7 @@ begin
       json := Self.ItemAsJSONObject(i);
       for j := 0 to Pred(json.Count) do
       begin
-        name := json.Pairs[i].JsonString.Value;
+        name := json.Pairs[j].JsonString.Value;
         if (not result.Contains(name)) and
            (not (json.GetValue(name) is TJSONObject)) and
            (not (json.GetValue(name) is TJSONArray))
