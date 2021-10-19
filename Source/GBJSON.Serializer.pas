@@ -62,15 +62,16 @@ end;
 
 procedure TGBJSONSerializer<T>.jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
 var
-  rttiProperty : TRttiProperty;
-  rttiType     : TRttiType;
-  rttiValues   : TArray<TValue>;
-  jsonValue    : TJSONValue;
-  date         : TDateTime;
-  enumValue    : Integer;
-  boolValue    : Boolean;
-  value        : TValue;
-  i            : Integer;
+  rttiProperty: TRttiProperty;
+  rttiType: TRttiType;
+  rttiValues: TArray<TValue>;
+  jsonValue: TJSONValue;
+  date: TDateTime;
+  enumValue: Integer;
+  boolValue: Boolean;
+  strValue: String;
+  value: TValue;
+  i: Integer;
 begin
   for rttiProperty in AType.GetProperties do
   begin
@@ -119,7 +120,8 @@ begin
 
       if rttiProperty.IsFloat then
       begin
-      rttiProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(jsonValue.Value, 0)));
+        strValue := jsonValue.Value.Replace('.', FormatSettings.DecimalSeparator);
+        rttiProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(strValue, 0)));
         Continue;
       end;
 
