@@ -188,7 +188,7 @@ begin
       jsonValue:= EmptyStr;
 
       if rttiType.TypeKind.IsString then
-        jsonValue := value.GetArrayElement(i).AsString.QuotedString
+        jsonValue := '"' + value.GetArrayElement(i).AsString + '"'
       else
       if rttiType.TypeKind.IsInteger then
         jsonValue := value.GetArrayElement(i).AsInteger.ToString

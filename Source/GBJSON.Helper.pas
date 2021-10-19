@@ -7,9 +7,7 @@ uses
   System.Classes,
   System.JSON,
   System.Generics.Collections,
-  {$IF CompilerVersion <= 34.0}
   REST.Json,
-  {$ENDIF}
   GBJSON.DateTime.Helper,
   GBJSON.Interfaces;
 
@@ -53,6 +51,8 @@ type
     {$IF CompilerVersion <= 26.0}
     function GetItems(Index: Integer): TJSONValue;
     {$ENDIF}
+
+    function GetFields: TList<String>;
   public
     {$IF CompilerVersion <= 26.0}
     function Count: Integer;
@@ -60,6 +60,11 @@ type
     {$ENDIF}
 
     function Encode: String;
+
+    procedure ToCsvFile(AFileName: String; Separator: string); overload;
+    class procedure ToCsvFile(JSONContent: String; AFileName: String; Separator: string); overload;
+    function ToCsv(Separator: string = ';'): String; overload;
+    class function ToCsv(JSONContent: String; Separator: string): String; overload;
 
     function ItemAsString(Index: Integer; Name: string; Default: string = ''): string;
     function ItemAsInteger(Index: Integer; Name: string; Default: Integer = 0): Integer;
@@ -319,6 +324,33 @@ begin
   result := TJSONObject.ParseJSONValue(Value) as TJSONArray;
 end;
 
+function TGBJSONArrayHelper.GetFields: TList<String>;
+var
+  i, j: Integer;
+  json: TJSONObject;
+  name: String;
+begin
+  result := TList<String>.create;
+  try
+    for i := 0 to Pred(Self.Count) do
+    begin
+      json := Self.ItemAsJSONObject(i);
+      for j := 0 to Pred(json.Count) do
+      begin
+        name := json.Pairs[j].JsonString.Value;
+        if (not result.Contains(name)) and
+           (not (json.GetValue(name) is TJSONObject)) and
+           (not (json.GetValue(name) is TJSONArray))
+        then
+          result.Add(name);
+      end;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
 {$IF CompilerVersion <= 26.0}
 function TADRIFoodHelperJSONArray.GetItems(Index: Integer): TJSONValue;
 begin
@@ -394,6 +426,83 @@ var
 begin
   json := ItemAsJSONObject(Index);
   result := json.ValueAsString(Name, Default);
+end;
+
+class function TGBJSONArrayHelper.ToCsv(JSONContent: String; Separator: string): String;
+var
+  jsonArray: TJSONArray;
+begin
+  jsonArray := Self.FromString(JSONContent);
+  try
+    result := jsonArray.ToCsv(Separator);
+  finally
+    jsonArray.Free;
+  end;
+end;
+
+class procedure TGBJSONArrayHelper.ToCsvFile(JSONContent, AFileName: String; Separator: string);
+var
+  jsonArray: TJSONArray;
+begin
+  jsonArray := FromString(JSONContent);
+  try
+    jsonArray.ToCsvFile(AFileName, Separator);
+  finally
+    jsonArray.Free;
+  end;
+end;
+
+procedure TGBJSONArrayHelper.ToCsvFile(AFileName: String; Separator: string);
+begin
+  with TStringList.Create do
+  try
+    Text := Self.ToCsv(Separator);
+    SaveToFile(AFileName);
+  finally
+    Free;
+  end;
+end;
+
+function TGBJSONArrayHelper.ToCsv(Separator: string = ';'): String;
+var
+  fields: TList<String>;
+  csv: TStrings;
+  line: string;
+  i, j: Integer;
+begin
+  fields := GetFields;
+  try
+    csv := TStringList.Create;
+    try
+      for i := 0 to Pred(fields.Count) do
+      begin
+        if i = 0 then
+          line := '"' + fields[i] + '"'
+        else
+          line := line + Separator + '"' + fields[i] + '"';
+      end;
+
+      csv.Add(line);
+      for i := 0 to Pred(Self.Count) do
+      begin
+        line := EmptyStr;
+        for j := 0 to Pred(fields.Count) do
+        begin
+          if j = 0 then
+            line := '"' + Self.ItemAsString(i, fields[j]) + '"'
+          else
+            line := line + Separator + '"' + Self.ItemAsString(i, fields[j]) + '"';
+        end;
+        csv.Add(line);
+      end;
+
+      Result := csv.Text;
+    finally
+      csv.Free;
+    end;
+  finally
+    fields.Free;
+  end;
 end;
 
 end.
