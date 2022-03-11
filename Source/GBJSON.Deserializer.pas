@@ -285,18 +285,30 @@ end;
 function TGBJSONDeserializer<T>.ObjectToJsonString(AObject: TObject; AType: TRttiType): string;
 var
   rttiProperty: TRttiProperty;
+  LFields: TList<String>;
+  LName: string;
 begin
   result := '{';
 
-  for rttiProperty in AType.GetProperties do
-  begin
-    if ( (not FUseIgnore) or (not rttiProperty.IsIgnore(AObject.ClassType))) and
-       (not rttiProperty.IsEmpty(AObject))
-    then
+  LFields := TList<String>.create;
+  try
+    for rttiProperty in AType.GetProperties do
     begin
-      result := result + Format('"%s":', [rttiProperty.JSONName]);
-      result := result + ValueToJson(AObject, rttiProperty) + ',';
+      if ( (not FUseIgnore) or (not rttiProperty.IsIgnore(AObject.ClassType))) and
+         (not rttiProperty.IsEmpty(AObject))
+      then
+      begin
+        LName := rttiProperty.JSONName.ToLower;
+        if not LFields.Contains(LName) then
+        begin
+          result := result + Format('"%s":', [rttiProperty.JSONName]);
+          result := result + ValueToJson(AObject, rttiProperty) + ',';
+          LFields.Add(LName);
+        end;
+      end;
     end;
+  finally
+    LFields.Free;
   end;
 
   if Result.EndsWith(',') then
