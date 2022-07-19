@@ -294,6 +294,8 @@ begin
   try
     for rttiProperty in AType.GetProperties do
     begin
+    if not rttiProperty.IsReadable then
+      Continue;
       if ( (not FUseIgnore) or (not rttiProperty.IsIgnore(AObject.ClassType))) and
          (not rttiProperty.IsEmpty(AObject))
       then
