@@ -4,6 +4,7 @@ interface
 
 uses
   GBJSON.Interfaces,
+  GBJSON.Config,
   GBJSON.Base,
   GBJSON.RTTI,
   GBJSON.DateTime.Helper,
@@ -116,9 +117,11 @@ var
   LPair: TJSONPair;
   LItem: TObject;
   i: Integer;
-  
 begin
   if not assigned(AJsonObject) then
+    Exit;
+
+  if not TGBJSONConfig.GetInstance.IgnoreEmptyValues then
     Exit;
 
   for i := AJsonObject.Count -1 downto 0  do
