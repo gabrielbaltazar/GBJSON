@@ -84,6 +84,9 @@ begin
       if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
         Continue;
 
+      if jsonValue is TJSONNull then
+        Continue;
+
       if rttiProperty.IsString then
       begin
         rttiProperty.SetValue(AObject, jsonValue.Value);

@@ -299,8 +299,7 @@ begin
     begin
     if not rttiProperty.IsReadable then
       Continue;
-      if ( (not FUseIgnore) or (not rttiProperty.IsIgnore(AObject.ClassType))) and
-         (not rttiProperty.IsEmpty(AObject))
+      if ((not FUseIgnore) or (not rttiProperty.IsIgnore(AObject.ClassType)))
       then
       begin
         LName := rttiProperty.JSONName.ToLower;
