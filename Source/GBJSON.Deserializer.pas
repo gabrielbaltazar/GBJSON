@@ -232,6 +232,9 @@ begin
 
   if AProperty.IsArray then
   begin
+    if value.GetArrayLength = 0 then
+      Exit('[]');
+
     result := '[';
 
     listType := AProperty.GetListType(AObject);
