@@ -2,6 +2,10 @@ unit GBJSON.DataSet.Interfaces;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   System.Generics.Collections,
   System.JSON,

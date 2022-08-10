@@ -2,58 +2,62 @@ unit GBJSON.Attributes;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   System.SysUtils;
 
 type
   JSONIgnore = class(TCustomAttribute)
   private
-    FIgnoreProperties: TArray<String>;
+    FIgnoreProperties: TArray<string>;
   public
-    property IgnoreProperties: TArray<String> read FIgnoreProperties;
+    constructor Create; overload;
+    constructor create(AIgnoreProperties: string); overload;
 
-    constructor create; overload;
-    constructor create(AIgnoreProperties: String); overload;
+    property IgnoreProperties: TArray<string> read FIgnoreProperties;
   end;
 
   JSONProp = class(TCustomAttribute)
   private
-    Fname: String;
+    Fname: string;
     FreadOnly: Boolean;
   public
-    property name: String read Fname;
-    property readOnly: Boolean read FreadOnly;
+    constructor Create(AName: string; AReadOnly: Boolean = False); overload;
+    constructor create(AReadOnly: Boolean; AName: string = ''); overload;
 
-    constructor create(AName: String; bReadOnly: Boolean = false); overload;
-    constructor create(bReadOnly: Boolean; AName: String = ''); overload;
+    property name: string read Fname;
+    property readOnly: Boolean read FreadOnly;
   end;
 
 implementation
 
 { JSONIgnore }
 
-constructor JSONIgnore.create(AIgnoreProperties: String);
+constructor JSONIgnore.create(AIgnoreProperties: string);
 begin
   FIgnoreProperties := AIgnoreProperties.Split([',']);
 end;
 
-constructor JSONIgnore.create;
+constructor JSONIgnore.Create;
 begin
   FIgnoreProperties := [];
 end;
 
 { JSONProp }
 
-constructor JSONProp.create(bReadOnly: Boolean; AName: String);
+constructor JSONProp.create(AReadOnly: Boolean; AName: string);
 begin
   Fname := AName;
-  FReadOnly := bReadOnly;
+  FReadOnly := AReadOnly;
 end;
 
-constructor JSONProp.create(AName: String; bReadOnly: Boolean);
+constructor JSONProp.Create(AName: string; AReadOnly: Boolean);
 begin
   Fname := AName;
-  FReadOnly := bReadOnly;
+  FReadOnly := AReadOnly;
 end;
 
 end.

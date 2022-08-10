@@ -2,6 +2,10 @@ unit GBJSON.DataSet.Serializer;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   GBJSON.DataSet.Interfaces,
   GBJSON.RTTI,
@@ -14,16 +18,14 @@ uses
   System.TypInfo,
   Data.DB;
 
-type TGBJSONDataSetSerializer<T: class, constructor> = class(TInterfacedObject, IGBJSONDataSetSerializer<T>)
-
+type
+  TGBJSONDataSetSerializer<T: class, constructor> = class(TInterfacedObject, IGBJSONDataSetSerializer<T>)
   private
     FClearDataSet: Boolean;
 
     procedure ClearDataSet(ADataSet: TDataSet); overload;
     procedure CreateFields(ADataSet: TDataSet);
-
     procedure FillDataSet(ADataSet: TDataSet; AObject: TObject);
-
   protected
     function ClearDataSet(AValue: Boolean): IGBJSONDataSetSerializer<T>; overload;
 
@@ -32,11 +34,10 @@ type TGBJSONDataSetSerializer<T: class, constructor> = class(TInterfacedObject, 
 
     procedure ObjectToDataSet(AValue: TObject; ADataSet: TDataSet);
     procedure ObjectListToDataSet(AValue: TObjectList<T>; ADataSet: TDataSet);
-
   public
-    constructor create;
+    constructor Create;
     class function New: IGBJSONDataSetSerializer<T>;
-end;
+  end;
 
 implementation
 
@@ -44,7 +45,7 @@ implementation
 
 function TGBJSONDataSetSerializer<T>.ClearDataSet(AValue: Boolean): IGBJSONDataSetSerializer<T>;
 begin
-  result := Self;
+  Result := Self;
   FClearDataSet := AValue;
 end;
 
@@ -60,7 +61,7 @@ begin
   end;
 end;
 
-constructor TGBJSONDataSetSerializer<T>.create;
+constructor TGBJSONDataSetSerializer<T>.Create;
 begin
   FClearDataSet := False;
 end;
@@ -131,15 +132,15 @@ begin
         if LProperty.IsArray then
           Continue;
       except
-        on e : Exception do
+        on E : Exception do
         begin
-          e.Message := Format('Error on read property %s from json: %s', [ LProperty.Name, e.message ]);
+          E.Message := Format('Error on read property %s from json: %s', [ LProperty.Name, E.message ]);
           raise;
         end;
       end;
     end;
 
-    ADataSet.invokeMethod('createDataSet', []);
+    ADataSet.InvokeMethod('createDataSet', []);
     if not ADataSet.Active then
       ADataSet.Active := True;
   finally
@@ -151,7 +152,7 @@ procedure TGBJSONDataSetSerializer<T>.FillDataSet(ADataSet: TDataSet; AObject: T
 var
   LProperty: TRttiProperty;
   LType: TRttiType;
-  LName: String;
+  LName: string;
   LField: TField;
   LValue: TValue;
 begin
@@ -171,9 +172,9 @@ begin
 
     ADataSet.Post;
   except
-    on e : Exception do
+    on E: Exception do
     begin
-      e.Message := Format('Error on fill property %s from object: %s', [ LProperty.Name, e.message ]);
+      E.Message := Format('Error on fill property %s from object: %s', [ LProperty.Name, E.Message ]);
       raise;
     end;
   end;
@@ -205,7 +206,7 @@ end;
 
 class function TGBJSONDataSetSerializer<T>.New: IGBJSONDataSetSerializer<T>;
 begin
-  result := Self.Create;
+  Result := Self.Create;
 end;
 
 procedure TGBJSONDataSetSerializer<T>.ObjectListToDataSet(AValue: TObjectList<T>; ADataSet: TDataSet);

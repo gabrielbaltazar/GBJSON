@@ -2,6 +2,10 @@ unit GBJSON.Serializer;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   GBJSON.Interfaces,
   GBJSON.Base,
@@ -15,255 +19,252 @@ uses
   System.StrUtils,
   System.TypInfo;
 
-type TGBJSONSerializer<T: class, constructor> = class(TGBJSONBase, IGBJSONSerializer<T>)
-
+type
+  TGBJSONSerializer<T: class, constructor> = class(TGBJSONBase, IGBJSONSerializer<T>)
   private
     FUseIgnore: Boolean;
 
-    procedure jsonObjectToObject    (AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType); overload;
+    procedure jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType); overload;
     procedure jsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
   public
-    procedure JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject); overload;
-    function  JsonObjectToObject(AJsonObject: TJSONObject): T; overload;
-    function  JsonStringToObject(AJsonString: String): T;
-    function  JsonArrayToList(Value: TJSONArray): TObjectList<T>;
-    function  JsonStringToList(Value: String): TObjectList<T>;
+    class function New(AUseIgnore: Boolean): IGBJSONSerializer<T>;
+    constructor Create(AUseIgnore: Boolean = True); reintroduce;
+    destructor Destroy; override;
 
-    class function New(bUseIgnore: Boolean): IGBJSONSerializer<T>;
-    constructor create(bUseIgnore: Boolean = True); reintroduce;
-    destructor  Destroy; override;
-end;
+    procedure JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject); overload;
+    function JsonObjectToObject(AJsonObject: TJSONObject): T; overload;
+    function JsonStringToObject(AJsonString: string): T;
+    function JsonArrayToList(AValue: TJSONArray): TObjectList<T>;
+    function JsonStringToList(AValue: string): TObjectList<T>;
+  end;
 
 implementation
 
 { TGBJSONSerializer }
 
-constructor TGBJSONSerializer<T>.create(bUseIgnore: Boolean);
+constructor TGBJSONSerializer<T>.Create(AUseIgnore: Boolean);
 begin
-  inherited create;
-  FUseIgnore := bUseIgnore;
+  inherited Create;
+  FUseIgnore := AUseIgnore;
 end;
 
 destructor TGBJSONSerializer<T>.Destroy;
 begin
-
   inherited;
 end;
 
-function TGBJSONSerializer<T>.JsonArrayToList(Value: TJSONArray): TObjectList<T>;
+function TGBJSONSerializer<T>.JsonArrayToList(AValue: TJSONArray): TObjectList<T>;
 var
-  i: Integer;
+  I: Integer;
 begin
-  result := TObjectList<T>.Create;
-
-  for i := 0 to Pred(Value.Count) do
-    Result.Add(JsonObjectToObject(TJSONObject(Value.Items[i])));
+  Result := TObjectList<T>.Create;
+  for I := 0 to Pred(AValue.Count) do
+    Result.Add(JsonObjectToObject(TJSONObject(AValue.Items[I])));
 end;
 
 procedure TGBJSONSerializer<T>.jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
 var
-  rttiProperty: TRttiProperty;
-  rttiType: TRttiType;
-  rttiValues: TArray<TValue>;
-  jsonValue: TJSONValue;
-  date: TDateTime;
-  enumValue: Integer;
-  boolValue: Boolean;
-  strValue: String;
-  value: TValue;
-  i: Integer;
+  LProperty: TRttiProperty;
+  LType: TRttiType;
+  LValues: TArray<TValue>;
+  LJsonValue: TJSONValue;
+  LDate: TDateTime;
+  LEnumValue: Integer;
+  LBoolValue: Boolean;
+  LStrValue: string;
+  LValue: TValue;
+  I: Integer;
 begin
-  for rttiProperty in AType.GetProperties do
+  for LProperty in AType.GetProperties do
   begin
     try
-      if (FUseIgnore) and (rttiProperty.IsIgnore(AObject.ClassType)) then
+      if (FUseIgnore) and (LProperty.IsIgnore(AObject.ClassType)) then
         Continue;
 
-      jsonValue := AJsonObject.Values[rttiProperty.JSONName];
+      LJsonValue := AJsonObject.Values[LProperty.JSONName];
 
-      if (not Assigned(jsonValue)) or (not rttiProperty.IsWritable) then
+      if (not Assigned(LJsonValue)) or (not LProperty.IsWritable) then
         Continue;
 
-      if jsonValue is TJSONNull then
+      if LJsonValue is TJSONNull then
         Continue;
 
-      if rttiProperty.IsString then
+      if LProperty.IsString then
       begin
-        rttiProperty.SetValue(AObject, jsonValue.Value);
+        LProperty.SetValue(AObject, LJsonValue.Value);
         Continue;
       end;
 
-      if rttiProperty.IsVariant then
+      if LProperty.IsVariant then
       begin
-        rttiProperty.SetValue(AObject, jsonValue.Value);
+        LProperty.SetValue(AObject, LJsonValue.Value);
         Continue;
       end;
 
-      if rttiProperty.IsInteger then
+      if LProperty.IsInteger then
       begin
-      rttiProperty.SetValue(AObject, StrToIntDef( jsonValue.Value, 0));
+        LProperty.SetValue(AObject, StrToIntDef( LJsonValue.Value, 0));
         Continue;
       end;
 
-      if rttiProperty.IsEnum then
+      if LProperty.IsEnum then
       begin
-        if jsonValue.Value.Trim.IsEmpty then
+        if LJsonValue.Value.Trim.IsEmpty then
           Continue;
-        enumValue := GetEnumValue(rttiProperty.GetValue(AObject).TypeInfo, jsonValue.Value);
-        rttiProperty.SetValue(AObject,
-          TValue.FromOrdinal(rttiProperty.GetValue(AObject).TypeInfo, enumValue));
+        LEnumValue := GetEnumValue(LProperty.GetValue(AObject).TypeInfo, LJsonValue.Value);
+        LProperty.SetValue(AObject,
+          TValue.FromOrdinal(LProperty.GetValue(AObject).TypeInfo, LEnumValue));
         Continue;
       end;
 
-      if rttiProperty.IsObject then
+      if LProperty.IsObject then
       begin
-        JsonObjectToObject(rttiProperty.GetValue(AObject).AsObject, TJSONObject(jsonValue));
+        JsonObjectToObject(LProperty.GetValue(AObject).AsObject, TJSONObject(LJsonValue));
         Continue;
       end;
 
-      if rttiProperty.IsFloat then
+      if LProperty.IsFloat then
       begin
-        strValue := jsonValue.Value.Replace('.', FormatSettings.DecimalSeparator);
-        rttiProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(strValue, 0)));
+        LStrValue := LJsonValue.Value.Replace('.', FormatSettings.DecimalSeparator);
+        LProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(LStrValue, 0)));
         Continue;
       end;
 
-      if rttiProperty.IsDateTime then
+      if LProperty.IsDateTime then
       begin
-        date.fromIso8601ToDateTime(jsonValue.Value);
-        rttiProperty.SetValue(AObject, TValue.From<TDateTime>(date));
+        LDate.fromIso8601ToDateTime(LJsonValue.Value);
+        LProperty.SetValue(AObject, TValue.From<TDateTime>(LDate));
         Continue;
       end;
 
-      if rttiProperty.IsList then
+      if LProperty.IsList then
       begin
-        jsonObjectToObjectList(AObject, TJSONArray(jsonValue), rttiProperty);
+        jsonObjectToObjectList(AObject, TJSONArray(LJsonValue), LProperty);
         Continue;
       end;
 
-      if rttiProperty.IsBoolean then
+      if LProperty.IsBoolean then
       begin
-        boolValue := jsonValue.Value.ToLower.Equals('true');
-        rttiProperty.SetValue(AObject, TValue.From<Boolean>(boolValue));
+        LBoolValue := LJsonValue.Value.ToLower.Equals('true');
+        LProperty.SetValue(AObject, TValue.From<Boolean>(LBoolValue));
         Continue;
       end;
 
-      if rttiProperty.IsArray then
+      if LProperty.IsArray then
       begin
-        if (not Assigned(jsonValue)) or (not (jsonValue is TJSONArray)) then
+        if (not Assigned(LJsonValue)) or (not (LJsonValue is TJSONArray)) then
           Continue;
 
-        rttiType := rttiProperty.GetListType(AObject);
-        SetLength(rttiValues, TJSONArray(jsonValue).Count);
-        for i := 0 to Pred(TJSONArray(jsonValue).Count) do
+        LType := LProperty.GetListType(AObject);
+        SetLength(LValues, TJSONArray(LJsonValue).Count);
+        for I := 0 to Pred(TJSONArray(LJsonValue).Count) do
         begin
-          if rttiType.TypeKind.IsString then
-            rttiValues[i] := TValue.From<String>(TJSONArray(jsonValue).Items[i].Value)
+          if LType.TypeKind.IsString then
+            LValues[I] := TValue.From<string>(TJSONArray(LJsonValue).Items[I].Value)
           else
-          if rttiType.TypeKind.IsInteger then
-            rttiValues[i] := TValue.From<Integer>(TJSONArray(jsonValue).Items[i].Value.ToInteger)
+          if LType.TypeKind.IsInteger then
+            LValues[I] := TValue.From<Integer>(TJSONArray(LJsonValue).Items[I].Value.ToInteger)
           else
-          if rttiType.TypeKind.IsFloat then
-            rttiValues[i] := TValue.From<Double>(TJSONArray(jsonValue).Items[i].Value.ToDouble)
+          if LType.TypeKind.IsFloat then
+            LValues[I] := TValue.From<Double>(TJSONArray(LJsonValue).Items[I].Value.ToDouble)
         end;
 
-        rttiProperty.SetValue(AObject,
-            TValue.FromArray(rttiProperty.PropertyType.Handle, rttiValues));
+        LProperty.SetValue(AObject,
+            TValue.FromArray(LProperty.PropertyType.Handle, LValues));
       end;
     except
-      on e : Exception do
+      on E: Exception do
       begin
-        e.Message := Format('Error on read property %s from json: %s', [ rttiProperty.Name, e.message ]);
+        E.Message := Format('Error on read property %s from json: %s', [ LProperty.Name, E.message ]);
         raise;
       end;
     end;
   end;
 end;
 
-procedure TGBJSONSerializer<T>.jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject);
+procedure TGBJSONSerializer<T>.JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject);
 var
-  rttiType: TRttiType;
+  LType: TRttiType;
 begin
   if (not Assigned(AObject)) or (not Assigned(AJsonObject)) then
     exit;
 
-  rttiType := TGBRTTI.GetInstance.GetType(AObject.ClassType);
-
-  JsonObjectToObject(AObject, AJsonObject, rttiType);
+  LType := TGBRTTI.GetInstance.GetType(AObject.ClassType);
+  JsonObjectToObject(AObject, AJsonObject, LType);
 end;
 
 function TGBJSONSerializer<T>.JsonObjectToObject(AJsonObject: TJSONObject): T;
 begin
-  result := T.create;
+  Result := T.create;
   JsonObjectToObject(Result, AJsonObject);
 end;
 
 procedure TGBJSONSerializer<T>.jsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
 var
-  i          : Integer;
-  objectItem : TObject;
-  value      : TValue;
-  listType   : TRttiType;
+  I: Integer;
+  LObjectItem: TObject;
+  LValue: TValue;
+  LListType: TRttiType;
 begin
   if not Assigned(AJsonArray) then
     Exit;
 
-  listType := AProperty.GetListType(AObject);
-  for i := 0 to Pred(AJsonArray.Count) do
+  LListType := AProperty.GetListType(AObject);
+  for I := 0 to Pred(AJsonArray.Count) do
   begin
-    if listType.TypeKind.IsObject then
+    if LListType.TypeKind.IsObject then
     begin
-      objectItem := listType.AsInstance.MetaclassType.Create;
-      objectItem.invokeMethod('create', []);
+      LObjectItem := LListType.AsInstance.MetaclassType.Create;
+      LObjectItem.InvokeMethod('create', []);
 
-      Self.JsonObjectToObject(objectItem, TJSONObject(AJsonArray.Items[i]));
-      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [objectItem]);
+      Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray.Items[I]));
+      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [LObjectItem]);
     end
     else
     begin
-      if listType.TypeKind.IsString then
-        value := TValue.From<String>(AJsonArray.Items[i].GetValue<String>);
+      if LListType.TypeKind.IsString then
+        LValue := TValue.From<string>(AJsonArray.Items[I].GetValue<string>);
 
-      if listType.TypeKind.IsFloat then
-        value := TValue.From<Double>(AJsonArray.Items[i].GetValue<Double>);
+      if LListType.TypeKind.IsFloat then
+        LValue := TValue.From<Double>(AJsonArray.Items[I].GetValue<Double>);
 
-      if listType.TypeKind.IsInteger then
-        value := TValue.From<Integer>(AJsonArray.Items[i].GetValue<Integer>);
+      if LListType.TypeKind.IsInteger then
+        LValue := TValue.From<Integer>(AJsonArray.Items[I].GetValue<Integer>);
 
-      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [value]);
+      AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [LValue]);
     end;
   end;
 end;
 
-function TGBJSONSerializer<T>.JsonStringToList(Value: String): TObjectList<T>;
+function TGBJSONSerializer<T>.JsonStringToList(AValue: string): TObjectList<T>;
 var
-  jsonArray: TJSONArray;
+  LJsonArray: TJSONArray;
 begin
-  jsonArray := TJSONObject.ParseJSONValue(Value) as TJSONArray;
+  LJsonArray := TJSONObject.ParseJSONValue(AValue) as TJSONArray;
   try
-    result := JsonArrayToList(jsonArray);
+    Result := JsonArrayToList(LJsonArray);
   finally
-    jsonArray.Free;
+    LJsonArray.Free;
   end;
 end;
 
-function TGBJSONSerializer<T>.JsonStringToObject(AJsonString: String): T;
+function TGBJSONSerializer<T>.JsonStringToObject(AJsonString: string): T;
 var
-  json: TJSONObject;
+  LJSON: TJSONObject;
 begin
-  result := nil;
-  json   := TJSONObject.ParseJSONValue(AJsonString) as TJSONObject;
+  Result := nil;
+  LJSON := TJSONObject.ParseJSONValue(AJsonString) as TJSONObject;
   try
-    if Assigned(json) then
-      result := Self.JsonObjectToObject(json);
+    if Assigned(LJSON) then
+      Result := Self.JsonObjectToObject(LJSON);
   finally
-    json.Free;
+    LJSON.Free;
   end;
 end;
 
-class function TGBJSONSerializer<T>.New(bUseIgnore: Boolean): IGBJSONSerializer<T>;
+class function TGBJSONSerializer<T>.New(AUseIgnore: Boolean): IGBJSONSerializer<T>;
 begin
-  result := Self.create(bUseIgnore);
+  Result := Self.Create(AUseIgnore);
 end;
 
 end.

@@ -2,6 +2,10 @@ unit GBJSON.Config;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   System.SysUtils;
 
@@ -19,25 +23,24 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    class function GetInstance: TGBJSONConfig;
+    class destructor UnInitialize;
 
-    function CaseDefinition(Value: TCaseDefinition): TGBJSONConfig; overload;
+    function CaseDefinition(AValue: TCaseDefinition): TGBJSONConfig; overload;
     function CaseDefinition: TCaseDefinition; overload;
 
     function IgnoreEmptyValues(AValue: Boolean): TGBJSONConfig; overload;
     function IgnoreEmptyValues: Boolean; overload;
-
-    class function GetInstance: TGBJSONConfig;
-    class destructor UnInitialize;
   end;
 
 implementation
 
 { TGBJSONConfig }
 
-function TGBJSONConfig.CaseDefinition(Value: TCaseDefinition): TGBJSONConfig;
+function TGBJSONConfig.CaseDefinition(AValue: TCaseDefinition): TGBJSONConfig;
 begin
   Result := Self;
-  FCaseDefinition := Value;
+  FCaseDefinition := AValue;
 end;
 
 function TGBJSONConfig.CaseDefinition: TCaseDefinition;
@@ -57,7 +60,6 @@ end;
 
 destructor TGBJSONConfig.Destroy;
 begin
-
   inherited;
 end;
 

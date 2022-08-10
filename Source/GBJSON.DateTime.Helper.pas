@@ -2,21 +2,24 @@ unit GBJSON.DateTime.Helper;
 
 interface
 
-uses System.sysUtils, System.DateUtils;
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
 
-type TGBJSONDatetimeHelper = record helper for TDateTime
+uses
+  System.sysUtils,
+  System.DateUtils;
 
+type
+  TGBJSONDatetimeHelper = record helper for TDateTime
   private
-    function Iso8601ToDateTime(AValue: String): TDateTime;
-
+    function Iso8601ToDateTime(AValue: string): TDateTime;
   public
     function DateTimeToIso8601: string;
-    function Format(ADateFormat: String): String;
-
+    function Format(ADateFormat: string): string;
     function FormatYYYY_MM_DD: string;
-
-    procedure fromIso8601ToDateTime(AValue: String);
-end;
+    procedure FromIso8601ToDateTime(AValue: string);
+  end;
 
 implementation
 
@@ -36,22 +39,22 @@ begin
     Result := FormatDateTime('yyyy"-"mm"-"dd"T"hh":"nn":"ss', Self);
 end;
 
-function TGBJSONDatetimeHelper.Format(ADateFormat: String): String;
+function TGBJSONDatetimeHelper.Format(ADateFormat: string): string;
 begin
-  result := FormatDateTime(ADateFormat, Self);
+  Result := FormatDateTime(ADateFormat, Self);
 end;
 
 function TGBJSONDatetimeHelper.FormatYYYY_MM_DD: string;
 begin
-  result := Format('yyyy-MM-dd');
+  Result := Format('yyyy-MM-dd');
 end;
 
-procedure TGBJSONDatetimeHelper.fromIso8601ToDateTime(AValue: String);
+procedure TGBJSONDatetimeHelper.fromIso8601ToDateTime(AValue: string);
 begin
   Self := Iso8601ToDateTime(AValue);
 end;
 
-function TGBJSONDatetimeHelper.Iso8601ToDateTime(AValue: String): TDateTime;
+function TGBJSONDatetimeHelper.Iso8601ToDateTime(AValue: string): TDateTime;
 var
   Y, M, D, HH, MI, SS: Cardinal;
 begin
