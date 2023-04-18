@@ -2,38 +2,40 @@ unit GBJSON.Base;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   System.SysUtils;
 
-type TGBJSONBase = class(TInterfacedObject)
-
+type
+  TGBJSONBase = class(TInterfacedObject)
   protected
     FDateTimeFormat: String;
-
   public
-    procedure DateTimeFormat(Value: String);
+    constructor Create; virtual;
+    destructor Destroy; override;
 
-    constructor create; virtual;
-    destructor  Destroy; override;
-end;
+    procedure DateTimeFormat(AValue: String);
+  end;
 
 implementation
 
 { TGBJSONBase }
 
-constructor TGBJSONBase.create;
+constructor TGBJSONBase.Create;
 begin
   FDateTimeFormat := EmptyStr;
 end;
 
-procedure TGBJSONBase.DateTimeFormat(Value: String);
+procedure TGBJSONBase.DateTimeFormat(AValue: String);
 begin
-  FDateTimeFormat := Value;
+  FDateTimeFormat := AValue;
 end;
 
 destructor TGBJSONBase.Destroy;
 begin
-
   inherited;
 end;
 

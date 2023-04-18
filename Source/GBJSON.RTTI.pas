@@ -2,6 +2,10 @@ unit GBJSON.RTTI;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   System.Rtti,
   System.SysUtils,
@@ -17,81 +21,77 @@ type
   end;
 
   TGBRTTI = class(TInterfacedObject, IGBRTTI)
-    private
-      class var FInstance: IGBRTTI;
+  private
+    class var FInstance: IGBRTTI;
+  private
+    FContext: TRttiContext;
 
-    private
-      FContext: TRttiContext;
+    constructor CreatePrivate;
+  public
+    class function GetInstance: IGBRTTI;
+    constructor Create;
+    destructor Destroy; override;
 
-      constructor createPrivate;
-    public
-      function GetType (AClass: TClass): TRttiType;
-      function FindType(ATypeName: string): TRttiType;
-
-      class function GetInstance: IGBRTTI;
-      constructor create;
-      destructor  Destroy; override;
+    function GetType(AClass: TClass): TRttiType;
+    function FindType(ATypeName: string): TRttiType;
   end;
 
   TTypeKindHelper = record helper for TTypeKind
   public
-    function IsString   : Boolean;
-    function IsInteger  : Boolean;
-    function IsArray    : Boolean;
-    function IsObject   : Boolean;
-    function IsFloat    : Boolean;
-    function IsVariant  : Boolean;
+    function IsString: Boolean;
+    function IsInteger: Boolean;
+    function IsArray: Boolean;
+    function IsObject: Boolean;
+    function IsFloat: Boolean;
+    function IsVariant: Boolean;
   end;
 
   TGBRTTITypeHelper = class helper for TRttiType
-    public
-      function IsList: Boolean;
+  public
+    function IsList: Boolean;
   end;
 
   TGBRTTIPropertyHelper = class helper for TRttiProperty
-    public
-      function IsList     : Boolean;
-      function IsString   : Boolean;
-      function IsInteger  : Boolean;
-      function IsEnum     : Boolean;
-      function IsArray    : Boolean;
-      function IsObject   : Boolean;
-      function IsFloat    : Boolean;
-      function IsDateTime : Boolean;
-      function IsBoolean  : Boolean;
-      function IsVariant  : Boolean;
+  public
+    function IsList: Boolean;
+    function IsString: Boolean;
+    function IsInteger: Boolean;
+    function IsEnum: Boolean;
+    function IsArray: Boolean;
+    function IsObject: Boolean;
+    function IsFloat: Boolean;
+    function IsDateTime: Boolean;
+    function IsBoolean: Boolean;
+    function IsVariant: Boolean;
 
-      function JSONName: String;
+    function IsEmpty(AObject: TObject): Boolean;
+    function IsIgnore(AClass: TClass): Boolean;
+    function IsReadOnly: Boolean;
 
-      function GetAttribute<T: TCustomAttribute>: T;
-
-      function IsEmpty(AObject: TObject): Boolean;
-      function IsIgnore(AClass: TClass): Boolean;
-      function IsReadOnly: Boolean;
-
-      function GetListType(AObject: TObject): TRttiType;
+    function JSONName: string;
+    function GetAttribute<T: TCustomAttribute>: T;
+    function GetListType(AObject: TObject): TRttiType;
   end;
 
   TGBObjectHelper = class helper for TObject
-    public
-      function invokeMethod(const MethodName: string; const Parameters: array of TValue): TValue;
-      function GetPropertyValue(Name: String): TValue;
+  public
+    function InvokeMethod(const AMethodName: string; const AParameters: array of TValue): TValue;
+    function GetPropertyValue(AName: string): TValue;
 
-      class function GetAttribute<T: TCustomAttribute>: T;
-
-      class function JsonIgnoreFields: TArray<String>;
+    class function GetAttribute<T: TCustomAttribute>: T;
+    class function JsonIgnoreFields: TArray<string>;
   end;
 
 implementation
 
 { TGBRTTI }
 
-constructor TGBRTTI.create;
+constructor TGBRTTI.Create;
 begin
-  raise Exception.Create('Utilize o Construtor GetInstance.');
+  raise Exception.Create('Utilize the GetInstance Construtor.');
 end;
 
-constructor TGBRTTI.createPrivate;
+constructor TGBRTTI.CreatePrivate;
 begin
   FContext := TRttiContext.Create;
 end;
@@ -110,21 +110,20 @@ end;
 class function TGBRTTI.GetInstance: IGBRTTI;
 begin
   if not Assigned(FInstance) then
-    FInstance := TGBRTTI.createPrivate;
-  result := FInstance;
+    FInstance := TGBRTTI.CreatePrivate;
+  Result := FInstance;
 end;
 
 function TGBRTTI.GetType(AClass: TClass): TRttiType;
 begin
-  result := FContext.GetType(AClass);
+  Result := FContext.GetType(AClass);
 end;
 
 { TGBRTTITypeHelper }
 
 function TGBRTTITypeHelper.IsList: Boolean;
 begin
-  result := False;
-
+  Result := False;
   if Self.AsInstance.Name.ToLower.StartsWith('tobjectlist<') then
     Exit(True);
 
@@ -136,33 +135,33 @@ end;
 
 function TGBRTTIPropertyHelper.GetAttribute<T>: T;
 var
-  i: Integer;
+  I: Integer;
 begin
-  result := nil;
-  for i := 0 to Pred(Length(Self.GetAttributes)) do
-    if Self.GetAttributes[i].ClassNameIs(T.className) then
-      Exit(T( Self.GetAttributes[i]));
+  Result := nil;
+  for I := 0 to Pred(Length(Self.GetAttributes)) do
+    if Self.GetAttributes[I].ClassNameIs(T.className) then
+      Exit(T( Self.GetAttributes[I]));
 end;
 
 function TGBRTTIPropertyHelper.GetListType(AObject: TObject): TRttiType;
 var
-  ListType     : TRttiType;
-  ListTypeName : string;
+  LListType: TRttiType;
+  LListTypeName: string;
 begin
   if not Self.GetValue(AObject).IsArray then
   begin
-    ListType := TGBRTTI.GetInstance.GetType(Self.GetValue(AObject).AsObject.ClassType);
-    ListTypeName := ListType.ToString;
+    LListType := TGBRTTI.GetInstance.GetType(Self.GetValue(AObject).AsObject.ClassType);
+    LListTypeName := LListType.ToString;
   end
   else
-    ListTypeName := Self.PropertyType.ToString;
+    LListTypeName := Self.PropertyType.ToString;
 
-  ListTypeName := ListTypeName.Replace('TObjectList<', EmptyStr);
-  ListTypeName := ListTypeName.Replace('TList<', EmptyStr);
-  ListTypeName := ListTypeName.Replace('TArray<', EmptyStr);
-  ListTypeName := ListTypeName.Replace('>', EmptyStr);
+  LListTypeName := LListTypeName.Replace('TObjectList<', EmptyStr);
+  LListTypeName := LListTypeName.Replace('TList<', EmptyStr);
+  LListTypeName := LListTypeName.Replace('TArray<', EmptyStr);
+  LListTypeName := LListTypeName.Replace('>', EmptyStr);
 
-  result := TGBRTTI.GetInstance.FindType(ListTypeName);
+  Result := TGBRTTI.GetInstance.FindType(LListTypeName);
 end;
 
 function TGBRTTIPropertyHelper.IsArray: Boolean;
@@ -172,22 +171,21 @@ end;
 
 function TGBRTTIPropertyHelper.IsBoolean: Boolean;
 begin
-  result := Self.PropertyType.ToString.ToLower.Equals('boolean');
+  Result := Self.PropertyType.ToString.ToLower.Equals('boolean');
 end;
 
 function TGBRTTIPropertyHelper.IsDateTime: Boolean;
 begin
-  result := (Self.PropertyType.ToString.ToLower.Equals('tdatetime')) or
-             (Self.PropertyType.ToString.ToLower.Equals('tdate')) or
-             (Self.PropertyType.ToString.ToLower.Equals('ttime'));
+  Result := (Self.PropertyType.ToString.ToLower.Equals('tdatetime')) or
+    (Self.PropertyType.ToString.ToLower.Equals('tdate')) or
+    (Self.PropertyType.ToString.ToLower.Equals('ttime'));
 end;
 
 function TGBRTTIPropertyHelper.IsEmpty(AObject: TObject): Boolean;
 var
-  objectList : TObject;
+  LObjectList : TObject;
 begin
-  result := False;
-
+  Result := False;
   if (Self.IsString) and (Self.GetValue(AObject).AsString.IsEmpty) then
     Exit(True);
 
@@ -202,8 +200,8 @@ begin
 
   if (Self.IsList) then
   begin
-    objectList := Self.GetValue(AObject).AsObject;
-    if (not Assigned(objectList)) or (objectList.GetPropertyValue('Count').AsInteger = 0) then
+    LObjectList := Self.GetValue(AObject).AsObject;
+    if (not Assigned(LObjectList)) or (LObjectList.GetPropertyValue('Count').AsInteger = 0) then
       Exit(True);
   end;
 
@@ -216,38 +214,38 @@ end;
 
 function TGBRTTIPropertyHelper.IsEnum: Boolean;
 begin
-  result := (not IsBoolean) and (Self.PropertyType.TypeKind = tkEnumeration);
+  Result := (not IsBoolean) and (Self.PropertyType.TypeKind = tkEnumeration);
 end;
 
 function TGBRTTIPropertyHelper.IsFloat: Boolean;
 begin
-  result := (Self.PropertyType.TypeKind.IsFloat) and (not IsDateTime);
+  Result := (Self.PropertyType.TypeKind.IsFloat) and (not IsDateTime);
 end;
 
 function TGBRTTIPropertyHelper.IsIgnore(AClass: TClass): Boolean;
 var
-  ignoreProperties: TArray<String>;
-  i: Integer;
+  LIgnoreProperties: TArray<string>;
+  I: Integer;
 begin
-  ignoreProperties := AClass.JsonIgnoreFields;
-  for i := 0 to Pred(Length(ignoreProperties)) do
+  LIgnoreProperties := AClass.JsonIgnoreFields;
+  for I := 0 to Pred(Length(LIgnoreProperties)) do
   begin
-    if Name.ToLower.Equals(ignoreProperties[i].ToLower) then
+    if Name.ToLower.Equals(LIgnoreProperties[I].ToLower) then
       Exit(True);
   end;
 
-  result := Self.GetAttribute<JSONIgnore> <> nil;
+  Result := Self.GetAttribute<JSONIgnore> <> nil;
   if not Result then
   begin
     if AClass.InheritsFrom(TInterfacedObject) then
-      result := Self.Name.ToLower.Equals('refcount');
+      Result := Self.Name.ToLower.Equals('refcount');
   end;
 
   if not Result then
   begin
-    for i := 0 to Pred(Length(Self.GetAttributes)) do
+    for I := 0 to Pred(Length(Self.GetAttributes)) do
     begin
-      if GetAttributes[i].ClassNameIs('SwagIgnore') then
+      if GetAttributes[I].ClassNameIs('SwagIgnore') then
         Exit(True);
     end;
   end;
@@ -255,13 +253,12 @@ end;
 
 function TGBRTTIPropertyHelper.IsInteger: Boolean;
 begin
-  result := Self.PropertyType.TypeKind.IsInteger;
+  Result := Self.PropertyType.TypeKind.IsInteger;
 end;
 
 function TGBRTTIPropertyHelper.IsList: Boolean;
 begin
   Result := False;
-
   if Self.PropertyType.ToString.ToLower.StartsWith('tobjectlist<') then
     Exit(True);
 
@@ -271,63 +268,64 @@ end;
 
 function TGBRTTIPropertyHelper.IsObject: Boolean;
 begin
-  result := (not IsList) and (Self.PropertyType.TypeKind.IsObject);
+  Result := (not IsList) and (Self.PropertyType.TypeKind.IsObject);
 end;
 
 function TGBRTTIPropertyHelper.IsReadOnly: Boolean;
 var
-  prop : JSONProp;
+  LProp: JSONProp;
 begin
-  result := False;
-  prop := GetAttribute<JSONProp>;
-  if Assigned(prop) then
-    result := prop.readOnly;
+  Result := False;
+  LProp := GetAttribute<JSONProp>;
+  if Assigned(LProp) then
+    Result := LProp.readOnly;
 end;
 
 function TGBRTTIPropertyHelper.IsString: Boolean;
 begin
-  result := Self.PropertyType.TypeKind.IsString;
+  Result := Self.PropertyType.TypeKind.IsString;
 end;
 
 function TGBRTTIPropertyHelper.IsVariant: Boolean;
 begin
-  result := Self.PropertyType.TypeKind.IsVariant;
+  Result := Self.PropertyType.TypeKind.IsVariant;
 end;
 
-function TGBRTTIPropertyHelper.JSONName: String;
+function TGBRTTIPropertyHelper.JSONName: string;
 var
   I: Integer;
   LField: TArray<Char>;
-  prop : JSONProp;
+  LProp: JSONProp;
 begin
-  result := Self.Name;
-  prop := GetAttribute<JSONProp>;
-  if (Assigned(prop)) and (not prop.name.IsEmpty) then
-    result := prop.name;
+  Result := Self.Name;
+  LProp := GetAttribute<JSONProp>;
+  if (Assigned(LProp)) and (not LProp.name.IsEmpty) then
+    Result := LProp.name;
 
   case TGBJSONConfig.GetInstance.CaseDefinition of
-    cdLower: result := result.ToLower;
-    cdUpper: result := result.ToUpper;
+    cdLower: Result := Result.ToLower;
+    cdUpper: Result := Result.ToUpper;
 
-    cdLowerCamelCase: begin
-      // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
-      // Thanks Vinicius Sanchez
-      LField := Self.Name.ToCharArray;
-      I := Low(LField);
-      While i <= High(LField) do
+    cdLowerCamelCase:
       begin
-        if (LField[I] = '_') then
+        // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
+        // Thanks Vinicius Sanchez
+        LField := Self.Name.ToCharArray;
+        I := Low(LField);
+        while i <= High(LField) do
         begin
+          if (LField[I] = '_') then
+          begin
+            Inc(I);
+            Result := Result + UpperCase(LField[I]);
+          end
+          else
+            Result := Result + LowerCase(LField[I]);
           Inc(I);
-          Result := Result + UpperCase(LField[I]);
-        end
-        else
-          Result := Result + LowerCase(LField[I]);
-        Inc(I);
+        end;
+        if Result.IsEmpty then
+          Result := Self.Name;
       end;
-      if Result.IsEmpty then
-        Result := Self.Name;
-    end;
   end;
 end;
 
@@ -335,93 +333,83 @@ end;
 
 class function TGBObjectHelper.GetAttribute<T>: T;
 var
-  i: Integer;
-  rType: TRttiType;
+  I: Integer;
+  LType: TRttiType;
 begin
-  result := nil;
-  rType  := TGBRTTI.GetInstance.GetType(Self);
-
-  for i := 0 to Pred(Length(rType.GetAttributes)) do
-    if rType.GetAttributes[i].ClassNameIs(T.className) then
-      Exit(T( rType.GetAttributes[i]));
+  Result := nil;
+  LType := TGBRTTI.GetInstance.GetType(Self);
+  for I := 0 to Pred(Length(LType.GetAttributes)) do
+    if LType.GetAttributes[I].ClassNameIs(T.className) then
+      Exit(T( LType.GetAttributes[I]));
 end;
 
-function TGBObjectHelper.GetPropertyValue(Name: String): TValue;
+function TGBObjectHelper.GetPropertyValue(AName: string): TValue;
 var
-  rttiProp: TRttiProperty;
+  LProp: TRttiProperty;
 begin
   if not Assigned(Self) then
     Exit(nil);
 
-  rttiProp := TGBRTTI.GetInstance.GetType(Self.ClassType)
-                .GetProperty(Name);
-
-  if Assigned(rttiProp) then
-    result := rttiProp.GetValue(Self);
+  LProp := TGBRTTI.GetInstance.GetType(Self.ClassType)
+                .GetProperty(AName);
+  if Assigned(LProp) then
+    Result := LProp.GetValue(Self);
 end;
 
-function TGBObjectHelper.invokeMethod(const MethodName: string; const Parameters: array of TValue): TValue;
+function TGBObjectHelper.InvokeMethod(const AMethodName: string; const AParameters: array of TValue): TValue;
 var
-  rttiType: TRttiType;
-  method  : TRttiMethod;
+  LiType: TRttiType;
+  LMethod: TRttiMethod;
 begin
-  rttiType := TGBRTTI.GetInstance.GetType(Self.ClassType);
-  method   := rttiType.GetMethod(MethodName);
+  LiType := TGBRTTI.GetInstance.GetType(Self.ClassType);
+  LMethod := LiType.GetMethod(AMethodName);
+  if not Assigned(LMethod) then
+    raise ENotImplemented.CreateFmt('Cannot find method %s in %s', [AMethodName, Self.ClassName]);
 
-  if not Assigned(method) then
-    raise ENotImplemented.CreateFmt('Cannot find method %s in %s', [MethodName, Self.ClassName]);
-
-  result := method.Invoke(Self, Parameters);
+  Result := LMethod.Invoke(Self, AParameters);
 end;
 
-class function TGBObjectHelper.JsonIgnoreFields: TArray<String>;
+class function TGBObjectHelper.JsonIgnoreFields: TArray<string>;
 var
-  ignore: JSONIgnore;
+  LIgnore: JSONIgnore;
 begin
-  result := [];
-  ignore := GetAttribute<JSONIgnore>;
-
-  if Assigned(ignore) then
-    result := ignore.IgnoreProperties;
+  Result := [];
+  LIgnore := GetAttribute<JSONIgnore>;
+  if Assigned(LIgnore) then
+    Result := LIgnore.IgnoreProperties;
 end;
 
 { TTypeKindHelper }
 
 function TTypeKindHelper.IsArray: Boolean;
 begin
-  Result := Self in
-    [tkSet, tkArray, tkDynArray]
+  Result := Self in [tkSet, tkArray, tkDynArray];
 end;
 
 function TTypeKindHelper.IsFloat: Boolean;
 begin
-  result := Self = tkFloat;
+  Result := Self = tkFloat;
 end;
 
 function TTypeKindHelper.IsInteger: Boolean;
 begin
-  result := Self in [tkInt64, tkInteger];
+  Result := Self in [tkInt64, tkInteger];
 end;
 
 function TTypeKindHelper.IsObject: Boolean;
 begin
-  result := Self = tkClass;
+  Result := Self = tkClass;
 end;
 
 function TTypeKindHelper.IsString: Boolean;
 begin
-  result := Self in
-    [tkChar,
-     tkString,
-     tkWChar,
-     tkLString,
-     tkWString,
-     tkUString];
+  Result := Self in [tkChar, tkString, tkWChar, tkLString,
+    tkWString, tkUString];
 end;
 
 function TTypeKindHelper.IsVariant: Boolean;
 begin
-  result := Self = tkVariant;
+  Result := Self = tkVariant;
 end;
 
 end.

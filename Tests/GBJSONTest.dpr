@@ -18,7 +18,10 @@ uses
   GBJSON.Helper in '..\Source\GBJSON.Helper.pas',
   GBJSON.Interfaces in '..\Source\GBJSON.Interfaces.pas',
   GBJSON.RTTI in '..\Source\GBJSON.RTTI.pas',
-  GBJSON.Serializer in '..\Source\GBJSON.Serializer.pas';
+  GBJSON.Serializer in '..\Source\GBJSON.Serializer.pas',
+  GBJSON.DataSet.Interfaces in '..\Source\GBJSON.DataSet.Interfaces.pas',
+  GBJSON.DataSet.Serializer in '..\Source\GBJSON.DataSet.Serializer.pas',
+  GBJSON.Test.DataSet.Serializer in 'GBJSON.Test.DataSet.Serializer.pas';
 
 begin
   ReportMemoryLeaksOnShutdown := True;
