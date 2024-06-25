@@ -217,7 +217,15 @@ begin
       LObjectItem := LListType.AsInstance.MetaclassType.Create;
       LObjectItem.InvokeMethod('create', []);
 
-      Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray.Items[I]));
+      if AJsonArray.Items[I] IS TJSONObject then
+      begin
+        Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray.Items[I]));
+      end
+      else
+      begin
+        Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray));
+      end;
+
       AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [LObjectItem]);
     end
     else
