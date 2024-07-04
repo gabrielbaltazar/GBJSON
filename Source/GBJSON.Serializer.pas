@@ -25,7 +25,8 @@ type
     FUseIgnore: Boolean;
 
     procedure jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType); overload;
-    procedure jsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
+    procedure jsonArrayToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
+    procedure jsonObjectToObjectList(AObject: TObject; AJsonObject: TJSONObject; AProperty: TRttiProperty);
   public
     class function New(AUseIgnore: Boolean): IGBJSONSerializer<T>;
     constructor Create(AUseIgnore: Boolean = True); reintroduce;
@@ -137,9 +138,15 @@ begin
         Continue;
       end;
 
+      if (LProperty.IsList) and (LJsonValue IS TJSONObject) then
+      begin
+        JsonObjectToObjectlist(AObject, TJSONObject(LJsonValue), LProperty);
+        Continue;
+      end;
+
       if LProperty.IsList then
       begin
-        jsonObjectToObjectList(AObject, TJSONArray(LJsonValue), LProperty);
+        jsonArrayToObjectList(AObject, TJSONArray(LJsonValue), LProperty);
         Continue;
       end;
 
@@ -199,7 +206,26 @@ begin
   JsonObjectToObject(Result, AJsonObject);
 end;
 
-procedure TGBJSONSerializer<T>.jsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
+procedure TGBJSONSerializer<T>.jsonObjectToObjectList(AObject: TObject; AJsonObject: TJSONObject;
+  AProperty: TRttiProperty);
+var
+  LObjectItem: TObject;
+  LListType: TRttiType;
+begin
+  if not Assigned(AJsonObject) then
+    Exit;
+
+  LListType := AProperty.GetListType(AObject);
+  if LListType.TypeKind.IsObject then
+  begin
+    LObjectItem := LListType.AsInstance.MetaclassType.Create;
+    LObjectItem.InvokeMethod('create', []);
+    Self.JsonObjectToObject(LObjectItem, AJsonObject);
+    AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [LObjectItem]);
+  end;
+end;
+
+procedure TGBJSONSerializer<T>.jsonArrayToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
 var
   I: Integer;
   LObjectItem: TObject;
@@ -216,15 +242,7 @@ begin
     begin
       LObjectItem := LListType.AsInstance.MetaclassType.Create;
       LObjectItem.InvokeMethod('create', []);
-
-      if AJsonArray.Items[I] IS TJSONObject then
-      begin
-        Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray.Items[I]));
-      end
-      else
-      begin
-        Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray));
-      end;
+      Self.JsonObjectToObject(LObjectItem, TJSONObject(AJsonArray.Items[I]));
 
       AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [LObjectItem]);
     end
