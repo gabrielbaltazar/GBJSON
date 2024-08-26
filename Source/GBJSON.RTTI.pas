@@ -26,7 +26,7 @@ type
   private
     FContext: TRttiContext;
 
-    constructor CreatePrivate;
+    constructor CreatePrivate(Value: Boolean = True);
   public
     class function GetInstance: IGBRTTI;
     constructor Create;
@@ -413,3 +413,4 @@ begin
 end;
 
 end.
+
