@@ -72,7 +72,7 @@ var
   LEnumValue: Integer;
   LBoolValue: Boolean;
   LStrValue: string;
-  LValue: TValue;
+//  LValue: TValue;
   I: Integer;
 begin
   for LProperty in AType.GetProperties do
@@ -98,6 +98,12 @@ begin
       if LProperty.IsVariant then
       begin
         LProperty.SetValue(AObject, LJsonValue.Value);
+        Continue;
+      end;
+
+      if LProperty.PropertyType.TypeKind = tkInt64 then
+      begin
+        LProperty.SetValue(AObject, StrToInt64Def( LJsonValue.Value, 0));
         Continue;
       end;
 

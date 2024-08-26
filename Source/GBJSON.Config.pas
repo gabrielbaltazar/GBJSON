@@ -19,7 +19,7 @@ type
     FCaseDefinition: TCaseDefinition;
     FIgnoreEmptyValues: Boolean;
 
-    constructor CreatePrivate;
+    constructor CreatePrivate(Value: Boolean = True);
   public
     constructor Create;
     destructor Destroy; override;
@@ -93,3 +93,4 @@ begin
 end;
 
 end.
+
