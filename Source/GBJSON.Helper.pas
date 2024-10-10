@@ -18,9 +18,9 @@ uses
 type
   TGBJSONObjectHelper = class helper for TJSONObject
   public
-    {$IF CompilerVersion <= 32.0}
+{$IF CompilerVersion <= 32.0}
     function Format: string; overload;
-    {$ENDIF}
+{$ENDIF}
 
     class function ObjectToJSONString(AValue: TObject): string;
     class function FromObject(AValue: TObject): TJSONObject;
@@ -49,16 +49,16 @@ type
 
   TGBJSONArrayHelper = class helper for TJSONArray
   private
-    {$IF CompilerVersion <= 26.0}
+{$IF CompilerVersion <= 26.0}
     function GetItems(AIndex: Integer): TJSONValue;
-    {$ENDIF}
+{$ENDIF}
 
     function GetFields: TList<string>;
   public
-    {$IF CompilerVersion <= 26.0}
+{$IF CompilerVersion <= 26.0}
     function Count: Integer;
     property Items[Index: Integer]: TJSONValue read GetItems;
-    {$ENDIF}
+{$ENDIF}
 
     function Encode: string;
     procedure ToCsvFile(AFileName: string; ASeparator: string); overload;
@@ -94,11 +94,11 @@ implementation
 
 function TGBJSONObjectHelper.Encode: string;
 begin
-  {$IF CompilerVersion > 26}
+{$IF CompilerVersion > 26}
   Result := TJson.JsonEncode(Self);
-  {$ELSE}
+{$ELSE}
   Result := Self.ToString;
-  {$ENDIF}
+{$ENDIF}
 end;
 
 class function TGBJSONObjectHelper.Format(AValue: string): string;
@@ -267,10 +267,10 @@ procedure TObjectHelper.FromJSONString(AValue: string);
 var
   LJSON: TJSONObject;
 begin
-  LJSON := TJSONObject.fromString(AValue);
+  LJSON := TJSONObject.FromString(AValue);
   try
     if Assigned(LJSON) then
-      fromJSONObject(LJSON);
+      FromJSONObject(LJSON);
   finally
     LJSON.Free;
   end;
@@ -297,7 +297,7 @@ function TObjectHelper.ToJSONString(AFormat: Boolean): string;
 begin
   Result := TJSONObject.ObjectToJSONString(Self);
   if AFormat then
-    Result := TJSONObject.format(Result);
+    Result := TJSONObject.Format(Result);
 end;
 
 { TGBJSONArrayHelper }
@@ -311,11 +311,11 @@ end;
 
 function TGBJSONArrayHelper.Encode: string;
 begin
-  {$IF CompilerVersion > 26}
+{$IF CompilerVersion > 26}
   Result := TJson.JsonEncode(Self);
-  {$ELSE}
+{$ELSE}
   Result := Self.ToString;
-  {$ENDIF}
+{$ENDIF}
 end;
 
 class function TGBJSONArrayHelper.FromString(AValue: string): TJSONArray;
@@ -338,9 +338,8 @@ begin
       begin
         LName := LJSON.Pairs[J].JsonString.Value;
         if (not Result.Contains(LName)) and
-           (not (LJSON.GetValue(LName) is TJSONObject)) and
-           (not (LJSON.GetValue(LName) is TJSONArray))
-        then
+          (not (LJSON.GetValue(LName) is TJSONObject)) and
+          (not (LJSON.GetValue(LName) is TJSONArray)) then
           Result.Add(LName);
       end;
     end;
@@ -395,7 +394,11 @@ end;
 
 function TGBJSONArrayHelper.ItemAsJSONArray(AIndex: Integer): TJSONArray;
 begin
-  Result := {$IF CompilerVersion > 26.0} Items[AIndex] as TJSONArray; {$ELSE} Self.Get(AIndex) as TJSONArray; {$ENDIF}
+{$IF CompilerVersion > 26.0}
+  Result :=  Items[AIndex] as TJSONArray;
+{$ELSE}
+  Result := Self.Get(AIndex) as TJSONArray;
+{$ENDIF}
 end;
 
 function TGBJSONArrayHelper.ItemAsJSONArray(AIndex: Integer; AName: string): TJSONArray;
@@ -416,7 +419,11 @@ end;
 
 function TGBJSONArrayHelper.ItemAsJSONObject(AIndex: Integer): TJSONObject;
 begin
-  Result := {$IF CompilerVersion > 26.0} Items[AIndex] as TJSONObject; {$ELSE} Self.Get(AIndex) as TJSONObject; {$ENDIF}
+{$IF CompilerVersion > 26.0}
+  Result :=  Items[AIndex] as TJSONObject;
+{$ELSE}
+  Result := Self.Get(AIndex) as TJSONObject;
+{$ENDIF}
 end;
 
 function TGBJSONArrayHelper.ItemAsString(AIndex: Integer; AName, ADefault: string): string;

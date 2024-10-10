@@ -32,11 +32,10 @@ type
   public
     class function New(AUseIgnore: Boolean = True): IGBJSONDeserializer<T>;
     constructor Create(AUseIgnore: Boolean = True); reintroduce;
-    destructor  Destroy; override;
 
     function ObjectToJsonString(AValue: TObject): string; overload;
     function ObjectToJsonObject(AValue: TObject): TJSONObject;
-    function StringToJsonObject(Avalue: string) : TJSONObject;
+    function StringToJsonObject(AValue: string) : TJSONObject;
     function ListToJSONArray(AValue: TObjectList<T>): TJSONArray;
   end;
 
@@ -53,20 +52,13 @@ begin
   FUseIgnore := AUseIgnore;
 end;
 
-destructor TGBJSONDeserializer<T>.Destroy;
-begin
-  inherited;
-end;
-
-function TGBJSONDeserializer<T>.StringToJsonObject(Avalue: string): TJSONObject;
+function TGBJSONDeserializer<T>.StringToJsonObject(AValue: string): TJSONObject;
 var
   LJSON: string;
 begin
-  LJSON := Avalue.Replace(#$D, EmptyStr)
-               .Replace(#$A, EmptyStr);
-
+  LJSON := AValue.Replace(#$D, EmptyStr)
+    .Replace(#$A, EmptyStr);
   Result := TJSONObject.ParseJSONValue(LJSON) as TJSONObject;
-
   if Assigned(Result) then
     ProcessOptions(Result);
 end;
@@ -114,13 +106,13 @@ var
   LItem: TObject;
   I: Integer;
 begin
-  if not assigned(AJsonObject) then
+  if not Assigned(AJsonObject) then
     Exit;
 
   if not TGBJSONConfig.GetInstance.IgnoreEmptyValues then
     Exit;
 
-  for I := AJsonObject.Count -1 downto 0  do
+  for I := Pred(AJsonObject.Count) downto 0  do
   begin
     LPair := TJSONPair(AJsonObject.Pairs[I]);
     if LPair.JsonValue is TJSOnObject then
@@ -128,16 +120,15 @@ begin
       ProcessOptions(TJSOnObject(LPair.JsonValue));
       if LPair.JsonValue.ToString.Equals('{}') then
       begin
-        AJsonObject.RemovePair(LPair.JsonString.Value).DisposeOf;
+        AJsonObject.RemovePair(LPair.JsonString.Value).Free;
         Continue;
       end;
     end
-    else if LPair.JsonValue is TJSONArray then
+    else
+    if LPair.JsonValue is TJSONArray then
     begin
       if (TJSONArray(LPair.JsonValue).Count = 0) then
-      begin
-        AJsonObject.RemovePair(LPair.JsonString.Value).DisposeOf;
-      end
+        AJsonObject.RemovePair(LPair.JsonString.Value).Free
       else
         for LItem in TJSONArray(LPair.JsonValue) do
         begin
@@ -146,12 +137,8 @@ begin
         end;
     end
     else
-    begin
-      if (LPair.JsonValue.value = '') or (LPair.JsonValue.ToJSON = '0') then
-      begin
-        AJsonObject.RemovePair(LPair.JsonString.Value).DisposeOf;
-      end;
-    end;
+    if (LPair.JsonValue.Value = '') or (LPair.JsonValue.ToJSON = '0') then
+      AJsonObject.RemovePair(LPair.JsonString.Value).Free;
   end;
 end;
 
@@ -175,7 +162,7 @@ begin
     Exit('[]');
 
   Result := '[';
-  for I := 0 to LValue.GetArrayLength - 1 do
+  for I := 0 to Pred(LValue.GetArrayLength) do
   begin
     if LValue.GetArrayElement(I).IsObject then
       Result := Result + ObjectToJsonString(LValue.GetArrayElement(I).AsObject) + ','

@@ -22,7 +22,6 @@ type
     constructor CreatePrivate;
   public
     constructor Create;
-    destructor Destroy; override;
     class function GetInstance: TGBJSONConfig;
     class destructor UnInitialize;
 
@@ -58,18 +57,12 @@ begin
   FIgnoreEmptyValues := True;
 end;
 
-destructor TGBJSONConfig.Destroy;
-begin
-  inherited;
-end;
-
 class function TGBJSONConfig.GetInstance: TGBJSONConfig;
 begin
   if not Assigned(FInstance) then
   begin
     FInstance := TGBJSONConfig.CreatePrivate;
-    FInstance
-      .CaseDefinition(cdNone)
+    FInstance.CaseDefinition(cdNone)
       .IgnoreEmptyValues(True);
   end;
   Result := FInstance;

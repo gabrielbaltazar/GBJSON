@@ -72,7 +72,6 @@ var
   LEnumValue: Integer;
   LBoolValue: Boolean;
   LStrValue: string;
-  LValue: TValue;
   I: Integer;
 begin
   for LProperty in AType.GetProperties do

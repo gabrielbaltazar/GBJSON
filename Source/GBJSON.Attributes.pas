@@ -15,28 +15,28 @@ type
     FIgnoreProperties: TArray<string>;
   public
     constructor Create; overload;
-    constructor create(AIgnoreProperties: string); overload;
+    constructor Create(AIgnoreProperties: string); overload;
 
     property IgnoreProperties: TArray<string> read FIgnoreProperties;
   end;
 
   JSONProp = class(TCustomAttribute)
   private
-    Fname: string;
-    FreadOnly: Boolean;
+    FName: string;
+    FReadOnly: Boolean;
   public
     constructor Create(AName: string; AReadOnly: Boolean = False); overload;
     constructor create(AReadOnly: Boolean; AName: string = ''); overload;
 
-    property name: string read Fname;
-    property readOnly: Boolean read FreadOnly;
+    property Name: string read FName;
+    property ReadOnly: Boolean read FReadOnly;
   end;
 
 implementation
 
 { JSONIgnore }
 
-constructor JSONIgnore.create(AIgnoreProperties: string);
+constructor JSONIgnore.Create(AIgnoreProperties: string);
 begin
   FIgnoreProperties := AIgnoreProperties.Split([',']);
 end;
@@ -48,15 +48,15 @@ end;
 
 { JSONProp }
 
-constructor JSONProp.create(AReadOnly: Boolean; AName: string);
+constructor JSONProp.Create(AReadOnly: Boolean; AName: string);
 begin
-  Fname := AName;
+  FName := AName;
   FReadOnly := AReadOnly;
 end;
 
 constructor JSONProp.Create(AName: string; AReadOnly: Boolean);
 begin
-  Fname := AName;
+  FName := AName;
   FReadOnly := AReadOnly;
 end;
 

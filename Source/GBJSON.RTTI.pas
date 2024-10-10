@@ -88,7 +88,7 @@ implementation
 
 constructor TGBRTTI.Create;
 begin
-  raise Exception.Create('Utilize the GetInstance Construtor.');
+  raise Exception.Create('Use the GetInstance Construtor.');
 end;
 
 constructor TGBRTTI.CreatePrivate;
@@ -278,7 +278,7 @@ begin
   Result := False;
   LProp := GetAttribute<JSONProp>;
   if Assigned(LProp) then
-    Result := LProp.readOnly;
+    Result := LProp.ReadOnly;
 end;
 
 function TGBRTTIPropertyHelper.IsString: Boolean;
@@ -299,8 +299,8 @@ var
 begin
   Result := Self.Name;
   LProp := GetAttribute<JSONProp>;
-  if (Assigned(LProp)) and (not LProp.name.IsEmpty) then
-    Result := LProp.name;
+  if (Assigned(LProp)) and (not LProp.Name.IsEmpty) then
+    Result := LProp.Name;
 
   case TGBJSONConfig.GetInstance.CaseDefinition of
     cdLower: Result := Result.ToLower;
@@ -351,7 +351,7 @@ begin
     Exit(nil);
 
   LProp := TGBRTTI.GetInstance.GetType(Self.ClassType)
-                .GetProperty(AName);
+    .GetProperty(AName);
   if Assigned(LProp) then
     Result := LProp.GetValue(Self);
 end;

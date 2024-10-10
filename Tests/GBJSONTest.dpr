@@ -3,6 +3,7 @@ program GBJSONTest;
 {$IFNDEF TESTINSIGHT}
 {$APPTYPE CONSOLE}
 {$ENDIF}{$STRONGLINKTYPES ON}
+
 uses
   System.SysUtils,
   TestInsight.DUnitX,
