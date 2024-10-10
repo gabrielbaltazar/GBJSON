@@ -24,8 +24,8 @@ type
 
     class function ObjectToJSONString(AValue: TObject): string;
     class function FromObject(AValue: TObject): TJSONObject;
-    class function FromFile(AValue: string) : TJSONObject;
-    class function FromString(AValue: string) : TJSONObject;
+    class function FromFile(AValue: string): TJSONObject;
+    class function FromString(AValue: string): TJSONObject;
     class function Format(AValue: string): string; overload;
 
     procedure SaveToFile(AFileName: string);
@@ -37,7 +37,7 @@ type
     function ValueAsDateTime(AName: string; AFormat: string = ''; ADefault: TDateTime = 0): TDateTime;
     function ValueAsBoolean(AName: string; ADefault: Boolean = True): Boolean;
     function ValueAsJSONObject(AName: string): TJSONObject;
-    function ValueAsJSONArray (AName: string): TJSONArray;
+    function ValueAsJSONArray(AName: string): TJSONArray;
 
     function SetValue(AName: string; AValue: Boolean): TJSONObject; overload;
     function SetValue(AName: string; AValue: Integer): TJSONObject; overload;
@@ -106,7 +106,7 @@ var
   LJsonObject: TJSONObject;
 begin
   Result := EmptyStr;
-  LJsonObject := fromString(AValue);
+  LJsonObject := FromString(AValue);
   try
     Result := LJsonObject.Format;
   finally
@@ -131,7 +131,7 @@ begin
   LFileJSON := TStringList.Create;
   try
     LFileJSON.LoadFromFile(AValue);
-    Result := fromString(LFileJSON.Text);
+    Result := FromString(LFileJSON.Text);
   finally
     LFileJSON.Free;
   end;
@@ -142,7 +142,7 @@ begin
   Result := TGBJSONDefault.Deserializer.ObjectToJsonObject(AValue);
 end;
 
-class function TGBJSONObjectHelper.fromString(AValue: string) : TJSONObject;
+class function TGBJSONObjectHelper.FromString(AValue: string) : TJSONObject;
 begin
   Result := TGBJSONDefault.Deserializer.StringToJsonObject(AValue);
 end;
