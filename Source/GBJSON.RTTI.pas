@@ -10,6 +10,7 @@ uses
   System.Rtti,
   System.SysUtils,
   System.TypInfo,
+  System.JSON.Types,
   GBJSON.Config,
   GBJSON.Attributes;
 
@@ -296,11 +297,16 @@ var
   I: Integer;
   LField: TArray<Char>;
   LProp: JSONProp;
+  LJSONName: JsonNameAttribute;
 begin
   Result := Self.Name;
   LProp := GetAttribute<JSONProp>;
   if (Assigned(LProp)) and (not LProp.Name.IsEmpty) then
-    Result := LProp.Name;
+    Exit(LProp.Name);
+
+  LJSONName := GetAttribute<JsonNameAttribute>;
+  if Assigned(LJSONName) then
+    Exit(LJSONName.Value);
 
   case TGBJSONConfig.GetInstance.CaseDefinition of
     cdLower: Result := Result.ToLower;
@@ -310,9 +316,10 @@ begin
       begin
         // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
         // Thanks Vinicius Sanchez
+        Result := EmptyStr;
         LField := Self.Name.ToCharArray;
         I := Low(LField);
-        while i <= High(LField) do
+        while I <= High(LField) do
         begin
           if (LField[I] = '_') then
           begin

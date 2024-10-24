@@ -219,11 +219,8 @@ begin
 end;
 
 function TGBJSONObjectHelper.ValueAsFloat(AName: string; ADefault: Double): Double;
-var
-  LStrValue: string;
 begin
-  LStrValue := ValueAsString(AName, ADefault.ToString);
-  Result := StrToFloatDef(LStrValue, ADefault);
+  Result := Self.GetValue<Double>(AName, ADefault);
 end;
 
 function TGBJSONObjectHelper.ValueAsInteger(AName: string; ADefault: Integer): Integer;

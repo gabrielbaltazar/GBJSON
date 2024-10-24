@@ -113,7 +113,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="GBJSON.Test.Register.pas"/>
         <DCCReference Include="GBJSON.Test.Models.pas"/>
         <DCCReference Include="GBJSON.Test.Deserialize.Person.pas"/>
         <DCCReference Include="GBJSON.Test.Serialize.Person.pas"/>
@@ -173,6 +172,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win32\Debug\GBJSONTest.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Debug\GBJSONTest.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>GBJSONTest.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="OSX32">
                         <Operation>1</Operation>

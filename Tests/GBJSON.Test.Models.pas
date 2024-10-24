@@ -3,6 +3,7 @@ unit GBJSON.Test.Models;
 interface
 
 uses
+  System.JSON.Types,
   System.SysUtils,
   System.Generics.Collections;
 
@@ -11,56 +12,56 @@ type
 
   TPhone = class
   private
-    FidTel: Double;
-    Fnumber: string;
+    FIdTel: Double;
+    FNumber: string;
   public
-    property idTel: Double read FidTel write FidTel;
-    property number: string read Fnumber write Fnumber;
+    property IdTel: Double read FIdTel write FIdTel;
+    property Number: string read FNumber write FNumber;
   end;
 
   TAddress = class
   private
-    FidAddress: string;
-    Fstreet: string;
+    FIdAddress: string;
+    FStreet: string;
   public
-    property idAddress: string read FidAddress write FidAddress;
-    property street: string read Fstreet write Fstreet;
+    property IdAddress: string read FIdAddress write FIdAddress;
+    property Street: string read FStreet write FStreet;
   end;
 
   TPerson = class
   private
-    FidPerson: Double;
-    Fname: string;
-    Faddress: TAddress;
-    Fphones: TObjectList<TPhone>;
-    FpersonType: TPersonType;
-    Fage: Integer;
-    FcreationDate: TDateTime;
-    Fobs: String;
-    Faverage: Double;
-    Factive: Boolean;
-    Fnotes: TList<Double>;
-    Fqualities: TArray<String>;
-    Fdocument_number: String;
+    FIdPerson: Double;
+    FName: string;
+    FAddress: TAddress;
+    FPhones: TObjectList<TPhone>;
+    FPersonType: TPersonType;
+    FAge: Integer;
+    FCreationDate: TDateTime;
+    FObs: string;
+    FAverage: Double;
+    FActive: Boolean;
+    FNotes: TList<Double>;
+    FQualities: TArray<string>;
+    FDocument_Number: string;
   public
-    property qualities: TArray<String> read Fqualities write Fqualities;
-    property idPerson: Double read FidPerson write FidPerson;
-    property name: string read Fname write Fname;
-    property document_number: String read Fdocument_number write Fdocument_number;
-    property age: Integer read Fage write Fage;
-    property creationDate: TDateTime read FcreationDate write FcreationDate;
-    property average: Double read Faverage write Faverage;
-    property active: Boolean read Factive write Factive;
-    property obs: String read Fobs write Fobs;
-    property address: TAddress read Faddress write Faddress;
-    property personType: TPersonType read FpersonType write FpersonType;
-    property phones: TObjectList<TPhone> read Fphones write Fphones;
-    property notes: TList<Double> read Fnotes write Fnotes;
-
+    constructor Create;
+    destructor Destroy; override;
     class function CreatePerson: TPerson;
 
-    constructor create;
-    destructor  Destroy; override;
+    property Qualities: TArray<string> read FQualities write FQualities;
+    property IdPerson: Double read FIdPerson write FIdPerson;
+    property Name: string read FName write FName;
+    property Document_Number: string read FDocument_Number write FDocument_Number;
+    property Age: Integer read FAge write FAge;
+    property CreationDate: TDateTime read FCreationDate write FCreationDate;
+    property Average: Double read FAverage write FAverage;
+    property Active: Boolean read FActive write FActive;
+    [JsonName('Observacao')]
+    property Obs: string read FObs write FObs;
+    property Address: TAddress read FAddress write FAddress;
+    property PersonType: TPersonType read FPersonType write FPersonType;
+    property Phones: TObjectList<TPhone> read FPhones write FPhones;
+    property Notes: TList<Double> read FNotes write FNotes;
   end;
 
   TUpperPerson = class
@@ -68,10 +69,10 @@ type
     FPERSON_ID: Double;
     FPERSON_NAME: string;
   public
+    class function CreatePerson: TUpperPerson;
+
     property PERSON_ID: Double read FPERSON_ID write FPERSON_ID;
     property PERSON_NAME: string read FPERSON_NAME write FPERSON_NAME;
-
-    class function CreatePerson: TUpperPerson;
   end;
 
 implementation
@@ -80,41 +81,41 @@ implementation
 
 constructor TPerson.create;
 begin
-  FpersonType := tpFisica;
-  Faddress   := TAddress.Create;
-  Fphones  := TObjectList<TPhone>.Create;
-  Fnotes   := TList<Double>.create;
-  Factive      := False;
+  FPersonType := tpFisica;
+  FAddress := TAddress.Create;
+  FPhones := TObjectList<TPhone>.Create;
+  FNotes := TList<Double>.Create;
+  FActive := False;
 end;
 
 class function TPerson.CreatePerson: TPerson;
 begin
   result := TPerson.Create;
-  Result.idPerson := 1;
+  Result.IdPerson := 1;
   Result.name := 'Teste';
-  Result.age := 18;
-  Result.average := 10;
-  Result.creationDate := Now;
-  Result.address.idAddress := '2';
-  Result.address.street := 'Teste';
-  Result.phones.Add(TPhone.Create);
-  Result.phones.Last.idTel := 3;
-  Result.phones.Last.number := '321654987';
+  Result.Age := 18;
+  Result.Average := 10;
+  Result.CreationDate := Now;
+  Result.Address.IdAddress := '2';
+  Result.Address.Street := 'Teste';
+  Result.Phones.Add(TPhone.Create);
+  Result.Phones.Last.IdTel := 3;
+  Result.Phones.Last.Number := '321654987';
 
-  Result.phones.Add(TPhone.Create);
-  Result.phones.Last.idTel := 4;
-  Result.phones.Last.number := '11111111';
+  Result.Phones.Add(TPhone.Create);
+  Result.Phones.Last.IdTel := 4;
+  Result.Phones.Last.Number := '11111111';
 
-  Result.notes.AddRange([5, 6]);
+  Result.Notes.AddRange([5, 6]);
 
-  Result.qualities := ['q1', 'q2'];
+  Result.Qualities := ['q1', 'q2'];
 end;
 
 destructor TPerson.Destroy;
 begin
-  Faddress.Free;
-  Fphones.Free;
-  Fnotes.Free;
+  FAddress.Free;
+  FPhones.Free;
+  FNotes.Free;
   inherited;
 end;
 
@@ -122,9 +123,9 @@ end;
 
 class function TUpperPerson.CreatePerson: TUpperPerson;
 begin
-  result := TUpperPerson.Create;
-  result.FPERSON_ID := 1;
-  result.FPERSON_NAME := 'Person Test';
+  Result := TUpperPerson.Create;
+  Result.FPERSON_ID := 1;
+  Result.FPERSON_NAME := 'Person Test';
 end;
 
 end.
