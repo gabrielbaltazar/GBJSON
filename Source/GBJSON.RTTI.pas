@@ -321,13 +321,16 @@ begin
         I := Low(LField);
         while I <= High(LField) do
         begin
+          if I = 0 then
+            Result := Result + LowerCase(LField[I])
+          else
           if (LField[I] = '_') then
           begin
             Inc(I);
             Result := Result + UpperCase(LField[I]);
           end
           else
-            Result := Result + LowerCase(LField[I]);
+            Result := Result + LField[I];
           Inc(I);
         end;
         if Result.IsEmpty then

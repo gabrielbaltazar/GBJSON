@@ -90,7 +90,7 @@ end;
 
 class function TPerson.CreatePerson: TPerson;
 begin
-  result := TPerson.Create;
+  Result := TPerson.Create;
   Result.IdPerson := 1;
   Result.name := 'Teste';
   Result.Age := 18;
