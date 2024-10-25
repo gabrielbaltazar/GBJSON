@@ -55,6 +55,7 @@ end;
 constructor TGBJSONConfig.CreatePrivate;
 begin
   FIgnoreEmptyValues := True;
+  FCaseDefinition := cdNone;
 end;
 
 class function TGBJSONConfig.GetInstance: TGBJSONConfig;
