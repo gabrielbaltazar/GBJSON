@@ -10,6 +10,7 @@ uses
   System.Rtti,
   System.SysUtils,
   System.TypInfo,
+  System.JSON.Types,
   GBJSON.Config,
   GBJSON.Attributes;
 
@@ -88,7 +89,7 @@ implementation
 
 constructor TGBRTTI.Create;
 begin
-  raise Exception.Create('Utilize the GetInstance Construtor.');
+  raise Exception.Create('Use the GetInstance Construtor.');
 end;
 
 constructor TGBRTTI.CreatePrivate;
@@ -278,7 +279,7 @@ begin
   Result := False;
   LProp := GetAttribute<JSONProp>;
   if Assigned(LProp) then
-    Result := LProp.readOnly;
+    Result := LProp.ReadOnly;
 end;
 
 function TGBRTTIPropertyHelper.IsString: Boolean;
@@ -296,11 +297,16 @@ var
   I: Integer;
   LField: TArray<Char>;
   LProp: JSONProp;
+  LJSONName: JsonNameAttribute;
 begin
   Result := Self.Name;
   LProp := GetAttribute<JSONProp>;
-  if (Assigned(LProp)) and (not LProp.name.IsEmpty) then
-    Result := LProp.name;
+  if (Assigned(LProp)) and (not LProp.Name.IsEmpty) then
+    Exit(LProp.Name);
+
+  LJSONName := GetAttribute<JsonNameAttribute>;
+  if Assigned(LJSONName) then
+    Exit(LJSONName.Value);
 
   case TGBJSONConfig.GetInstance.CaseDefinition of
     cdLower: Result := Result.ToLower;
@@ -310,17 +316,21 @@ begin
       begin
         // Copy From DataSet-Serialize - https://github.com/viniciussanchez/dataset-serialize
         // Thanks Vinicius Sanchez
+        Result := EmptyStr;
         LField := Self.Name.ToCharArray;
         I := Low(LField);
-        while i <= High(LField) do
+        while I <= High(LField) do
         begin
+          if I = 0 then
+            Result := Result + LowerCase(LField[I])
+          else
           if (LField[I] = '_') then
           begin
             Inc(I);
             Result := Result + UpperCase(LField[I]);
           end
           else
-            Result := Result + LowerCase(LField[I]);
+            Result := Result + LField[I];
           Inc(I);
         end;
         if Result.IsEmpty then
@@ -351,7 +361,7 @@ begin
     Exit(nil);
 
   LProp := TGBRTTI.GetInstance.GetType(Self.ClassType)
-                .GetProperty(AName);
+    .GetProperty(AName);
   if Assigned(LProp) then
     Result := LProp.GetValue(Self);
 end;

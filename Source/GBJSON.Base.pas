@@ -15,9 +15,8 @@ type
     FDateTimeFormat: String;
   public
     constructor Create; virtual;
-    destructor Destroy; override;
 
-    procedure DateTimeFormat(AValue: String);
+    procedure DateTimeFormat(AValue: string);
   end;
 
 implementation
@@ -29,14 +28,9 @@ begin
   FDateTimeFormat := EmptyStr;
 end;
 
-procedure TGBJSONBase.DateTimeFormat(AValue: String);
+procedure TGBJSONBase.DateTimeFormat(AValue: string);
 begin
   FDateTimeFormat := AValue;
-end;
-
-destructor TGBJSONBase.Destroy;
-begin
-  inherited;
 end;
 
 end.

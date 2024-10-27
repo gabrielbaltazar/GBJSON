@@ -7,16 +7,16 @@ interface
 {$ENDIF}
 
 uses
-  GBJSON.DataSet.Interfaces,
-  GBJSON.RTTI,
-  GBJSON.Serializer,
-  GBJSON.DateTime.Helper,
   System.Generics.Collections,
   System.JSON,
   System.Rtti,
   System.SysUtils,
   System.TypInfo,
-  Data.DB;
+  Data.DB,
+  GBJSON.DataSet.Interfaces,
+  GBJSON.RTTI,
+  GBJSON.Serializer,
+  GBJSON.DateTime.Helper;
 
 type
   TGBJSONDataSetSerializer<T: class, constructor> = class(TInterfacedObject, IGBJSONDataSetSerializer<T>)
@@ -70,17 +70,16 @@ procedure TGBJSONDataSetSerializer<T>.CreateFields(ADataSet: TDataSet);
 var
   LProperty: TRttiProperty;
   LType: TRttiType;
-  LName: String;
+  LName: string;
   LObject: T;
 begin
-  LObject := T.create;
+  LObject := T.Create;
   try
     LType := TGBRTTI.GetInstance.GetType(LObject.ClassType);
     for LProperty in LType.GetProperties do
     begin
       try
         LName := LProperty.JSONName;
-
         if LProperty.IsString then
         begin
           ADataSet.FieldDefs.Add(LName, ftString, 4000, False);
@@ -132,15 +131,15 @@ begin
         if LProperty.IsArray then
           Continue;
       except
-        on E : Exception do
+        on E: Exception do
         begin
-          E.Message := Format('Error on read property %s from json: %s', [ LProperty.Name, E.message ]);
+          E.Message := Format('Error on read property %s from json: %s', [LProperty.Name, E.Message]);
           raise;
         end;
       end;
     end;
 
-    ADataSet.InvokeMethod('createDataSet', []);
+    ADataSet.InvokeMethod('CreateDataSet', []);
     if not ADataSet.Active then
       ADataSet.Active := True;
   finally
@@ -158,9 +157,9 @@ var
 begin
   LType := TGBRTTI.GetInstance.GetType(AObject.ClassType);
   ADataSet.Append;
-  try
-    for LProperty in LType.GetProperties do
-    begin
+  for LProperty in LType.GetProperties do
+  begin
+    try
       LName := LProperty.JSONName;
       LField := ADataSet.FindField(LName);
       if not Assigned(LField) then
@@ -168,16 +167,15 @@ begin
 
       LValue := LProperty.GetValue(AObject);
       LField.Value := LValue.AsVariant;
-    end;
-
-    ADataSet.Post;
-  except
-    on E: Exception do
-    begin
-      E.Message := Format('Error on fill property %s from object: %s', [ LProperty.Name, E.Message ]);
-      raise;
+    except
+      on E: Exception do
+      begin
+        E.Message := Format('Error on fill property %s from object: %s', [LProperty.Name, E.Message]);
+        raise;
+      end;
     end;
   end;
+  ADataSet.Post;
 end;
 
 procedure TGBJSONDataSetSerializer<T>.JsonArrayToDataSet(AValue: TJSONArray; ADataSet: TDataSet);

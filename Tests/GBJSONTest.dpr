@@ -3,10 +3,10 @@ program GBJSONTest;
 {$IFNDEF TESTINSIGHT}
 {$APPTYPE CONSOLE}
 {$ENDIF}{$STRONGLINKTYPES ON}
+
 uses
   System.SysUtils,
   TestInsight.DUnitX,
-  GBJSON.Test.Register in 'GBJSON.Test.Register.pas',
   GBJSON.Test.Models in 'GBJSON.Test.Models.pas',
   GBJSON.Test.Deserialize.Person in 'GBJSON.Test.Deserialize.Person.pas',
   GBJSON.Test.Serialize.Person in 'GBJSON.Test.Serialize.Person.pas',
@@ -26,5 +26,4 @@ uses
 begin
   ReportMemoryLeaksOnShutdown := True;
   TestInsight.DUnitX.RunRegisteredTests;
-
 end.
