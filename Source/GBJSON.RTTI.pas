@@ -10,7 +10,6 @@ uses
   System.Rtti,
   System.SysUtils,
   System.TypInfo,
-  System.JSON.Types,
   GBJSON.Config,
   GBJSON.Attributes;
 
@@ -306,7 +305,11 @@ begin
 
   LJSONName := GetAttribute<JsonNameAttribute>;
   if Assigned(LJSONName) then
+{$IF CompilerVersion >= 36.0}
     Exit(LJSONName.Value);
+{$ELSE}
+    Exit(LJSONName.Name);
+{$ENDIF}
 
   case TGBJSONConfig.GetInstance.CaseDefinition of
     cdLower: Result := Result.ToLower;

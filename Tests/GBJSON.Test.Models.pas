@@ -3,9 +3,9 @@ unit GBJSON.Test.Models;
 interface
 
 uses
-  System.JSON.Types,
   System.SysUtils,
-  System.Generics.Collections;
+  System.Generics.Collections,
+  GBJSON.Attributes;
 
 type
   TPersonType = (tpFisica, tpJuridica);

@@ -7,9 +7,20 @@ interface
 {$ENDIF}
 
 uses
+{$IF CompilerVersion >= 36.0}
+  System.JSON.Types,
+{$ELSE}
+  REST.Json.Types,
+{$ENDIF}
   System.SysUtils;
 
 type
+{$IF CompilerVersion >= 36.0}
+  JSONNameAttribute = System.JSON.Types.JSONNameAttribute;
+{$ELSE}
+  JSONNameAttribute = REST.Json.Types.JSONNameAttribute;
+{$ENDIF}
+
   JSONIgnore = class(TCustomAttribute)
   private
     FIgnoreProperties: TArray<string>;
