@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{9612F86A-008E-4CE8-9FC6-265B1E655099}</ProjectGuid>
-        <ProjectVersion>20.2</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <MainSource>GBJSONTest.dpr</MainSource>
         <Base>True</Base>
@@ -128,6 +128,7 @@
         <DCCReference Include="..\Source\GBJSON.DataSet.Interfaces.pas"/>
         <DCCReference Include="..\Source\GBJSON.DataSet.Serializer.pas"/>
         <DCCReference Include="GBJSON.Test.DataSet.Serializer.pas"/>
+        <DCCReference Include="..\Source\GBJSON.Firedac.Interfaces.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -285,6 +286,16 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV35">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v35</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>

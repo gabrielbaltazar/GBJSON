@@ -21,7 +21,8 @@ uses
   GBJSON.Serializer in '..\Source\GBJSON.Serializer.pas',
   GBJSON.DataSet.Interfaces in '..\Source\GBJSON.DataSet.Interfaces.pas',
   GBJSON.DataSet.Serializer in '..\Source\GBJSON.DataSet.Serializer.pas',
-  GBJSON.Test.DataSet.Serializer in 'GBJSON.Test.DataSet.Serializer.pas';
+  GBJSON.Test.DataSet.Serializer in 'GBJSON.Test.DataSet.Serializer.pas',
+  GBJSON.Firedac.Interfaces in '..\Source\GBJSON.Firedac.Interfaces.pas';
 
 begin
   ReportMemoryLeaksOnShutdown := True;
