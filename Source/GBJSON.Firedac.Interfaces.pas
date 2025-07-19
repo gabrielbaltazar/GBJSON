@@ -2,6 +2,10 @@ unit GBJSON.Firedac.Interfaces;
 
 interface
 
+{$IFDEF WEAKPACKAGEUNIT}
+  {$WEAKPACKAGEUNIT ON}
+{$ENDIF}
+
 uses
   System.Generics.Collections,
   FireDAC.Phys.MongoDBWrapper;

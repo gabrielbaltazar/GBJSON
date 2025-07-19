@@ -22,7 +22,9 @@ uses
   GBJSON.DataSet.Interfaces in '..\Source\GBJSON.DataSet.Interfaces.pas',
   GBJSON.DataSet.Serializer in '..\Source\GBJSON.DataSet.Serializer.pas',
   GBJSON.Test.DataSet.Serializer in 'GBJSON.Test.DataSet.Serializer.pas',
-  GBJSON.Firedac.Interfaces in '..\Source\GBJSON.Firedac.Interfaces.pas';
+  GBJSON.Firedac.Interfaces in '..\Source\GBJSON.Firedac.Interfaces.pas',
+  GBJSON.Firedac.Deserializer in '..\Source\GBJSON.Firedac.Deserializer.pas',
+  GBJSON.Firedac.Deserializer.Test in 'GBJSON.Firedac.Deserializer.Test.pas';
 
 begin
   ReportMemoryLeaksOnShutdown := True;
