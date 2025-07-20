@@ -24,7 +24,10 @@ uses
   GBJSON.Test.DataSet.Serializer in 'GBJSON.Test.DataSet.Serializer.pas',
   GBJSON.Firedac.Interfaces in '..\Source\GBJSON.Firedac.Interfaces.pas',
   GBJSON.Firedac.Deserializer in '..\Source\GBJSON.Firedac.Deserializer.pas',
-  GBJSON.Firedac.Deserializer.Test in 'GBJSON.Firedac.Deserializer.Test.pas';
+  GBJSON.Firedac.Deserializer.Test in 'GBJSON.Firedac.Deserializer.Test.pas',
+  GBJSON.Firedac.Serializer in '..\Source\GBJSON.Firedac.Serializer.pas',
+  GBJSON.Firedac.Serializer.Test in 'GBJSON.Firedac.Serializer.Test.pas',
+  GBJSON.Firedac.Models.Classes in 'GBJSON.Firedac.Models.Classes.pas';
 
 begin
   ReportMemoryLeaksOnShutdown := True;

@@ -131,6 +131,9 @@
         <DCCReference Include="..\Source\GBJSON.Firedac.Interfaces.pas"/>
         <DCCReference Include="..\Source\GBJSON.Firedac.Deserializer.pas"/>
         <DCCReference Include="GBJSON.Firedac.Deserializer.Test.pas"/>
+        <DCCReference Include="..\Source\GBJSON.Firedac.Serializer.pas"/>
+        <DCCReference Include="GBJSON.Firedac.Serializer.Test.pas"/>
+        <DCCReference Include="GBJSON.Firedac.Models.Classes.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -175,7 +178,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win32\Debug\GBJSONTest.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win32\Debug\GBJSONTest.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Debug\GBJSONTest.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>GBJSONTest.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="OSX32">
                         <Operation>1</Operation>

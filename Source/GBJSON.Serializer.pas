@@ -24,12 +24,11 @@ type
   private
     FUseIgnore: Boolean;
 
-    procedure jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType); overload;
-    procedure jsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
+    procedure JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType); overload;
+    procedure JsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
   public
     class function New(AUseIgnore: Boolean): IGBJSONSerializer<T>;
     constructor Create(AUseIgnore: Boolean = True); reintroduce;
-    destructor Destroy; override;
 
     procedure JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject); overload;
     function JsonObjectToObject(AJsonObject: TJSONObject): T; overload;
@@ -48,11 +47,6 @@ begin
   FUseIgnore := AUseIgnore;
 end;
 
-destructor TGBJSONSerializer<T>.Destroy;
-begin
-  inherited;
-end;
-
 function TGBJSONSerializer<T>.JsonArrayToList(AValue: TJSONArray): TObjectList<T>;
 var
   I: Integer;
@@ -62,12 +56,13 @@ begin
     Result.Add(JsonObjectToObject(TJSONObject(AValue.Items[I])));
 end;
 
-procedure TGBJSONSerializer<T>.jsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
+procedure TGBJSONSerializer<T>.JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
 var
   LProperty: TRttiProperty;
   LType: TRttiType;
   LValues: TArray<TValue>;
   LJsonValue: TJSONValue;
+  LJSONDate: TJSONValue;
   LDate: TDateTime;
   LEnumValue: Integer;
   LBoolValue: Boolean;
@@ -131,7 +126,10 @@ begin
 
       if LProperty.IsDateTime then
       begin
-        LDate.fromIso8601ToDateTime(LJsonValue.Value);
+        if LJsonValue.TryGetValue<TJSONValue>('$date', LJSONDate) then
+          LDate.FromIso8601ToDateTime(LJSONDate.Value)
+        else
+          LDate.FromIso8601ToDateTime(LJsonValue.Value);
         LProperty.SetValue(AObject, TValue.From<TDateTime>(LDate));
         Continue;
       end;
@@ -198,7 +196,7 @@ begin
   JsonObjectToObject(Result, AJsonObject);
 end;
 
-procedure TGBJSONSerializer<T>.jsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
+procedure TGBJSONSerializer<T>.JsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
 var
   I: Integer;
   LObjectItem: TObject;
