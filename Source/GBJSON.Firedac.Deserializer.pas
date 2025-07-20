@@ -12,10 +12,10 @@ uses
   System.StrUtils,
   System.Variants,
   System.TypInfo,
-  GBJSON.RTTI,
-  GBJSON.Config,
   System.Generics.Collections,
   FireDAC.Phys.MongoDBWrapper,
+  GBJSON.RTTI,
+  GBJSON.Config,
   GBJSON.Firedac.Interfaces;
 
 type
@@ -24,6 +24,8 @@ type
   private
     FConnection: TMongoConnection;
     FUseIgnore: Boolean;
+    FOriginalCaseDefinition: TCaseDefinition;
+    FCaseDefinition: TCaseDefinition;
 
     procedure ObjectToMongoDocument(AValue: TObject; ADocument: TMongoDocument); overload;
 
@@ -32,8 +34,9 @@ type
     procedure AddValueListToDocument(AObject: TObject; AProperty: TRttiProperty;
       ADocument: TMongoDocument);
   protected
-    function ObjectToMongoDocument(AValue: TObject): TMongoDocument; overload;
-    function ListToMongoDocument(AList: TObjectList<T>): TMongoDocument;
+    function CaseDefinition(const AValue: TCaseDefinition): IGBJSONFDDeserializer<T>;
+    function ObjectToMongoDocument(const AValue: TObject): TMongoDocument; overload;
+    function ListToMongoDocument(const APropName: string; const AList: TObjectList<T>): TMongoDocument;
   public
     constructor Create(AConnection: TMongoConnection; AUseIgnore: Boolean = True);
     class function New(AConnection: TMongoConnection; AUseIgnore: Boolean = True): IGBJSONFDDeserializer<T>;
@@ -132,7 +135,7 @@ begin
   end
   else
   if AProperty.IsList then
-    Self.AddValueListToDocument(LValue.AsObject, AProperty, ADocument)
+    Self.AddValueListToDocument(AObject, AProperty, ADocument)
   else
   if AProperty.IsArray then
   begin
@@ -155,16 +158,56 @@ begin
   end;
 end;
 
+function TGBJSONFiredacDeserializer<T>.CaseDefinition(
+  const AValue: TCaseDefinition): IGBJSONFDDeserializer<T>;
+begin
+  Result := Self;
+  FCaseDefinition := AValue;
+end;
+
 constructor TGBJSONFiredacDeserializer<T>.Create(AConnection: TMongoConnection;
   AUseIgnore: Boolean = True);
 begin
   FConnection := AConnection;
   FUseIgnore := AUseIgnore;
+  FCaseDefinition := TGBJSONConfig.GetInstance.CaseDefinition;
+  FOriginalCaseDefinition := FCaseDefinition;
 end;
 
-function TGBJSONFiredacDeserializer<T>.ListToMongoDocument(AList: TObjectList<T>): TMongoDocument;
+function TGBJSONFiredacDeserializer<T>.ListToMongoDocument(const APropName: string; const AList: TObjectList<T>): TMongoDocument;
+var
+  LEnv: TMongoEnv;
+  LArray: TArray<T>;
+  I: Integer;
 begin
+  TGBJSONConfig.GetInstance.CaseDefinition(FCaseDefinition);
+  try
+    if not Assigned(AList) then
+      Exit(nil);
 
+    LArray := AList.ToArray;
+    LEnv := FConnection.Env;
+    Result := LEnv.NewDoc;
+    try
+      Result. BeginArray(APropName);
+      for I := 0 to Pred(Length(LArray)) do
+      begin
+        if LArray[I] is TObject then
+        begin
+          Result.BeginObject(I.ToString);
+          Self.ObjectToMongoDocument(TObject(LArray[I]), Result);
+          Result.EndObject;
+        end
+      end;
+      Result.EndArray;
+
+    except
+      Result.Free;
+      raise;
+    end;
+  finally
+    TGBJSONConfig.GetInstance.CaseDefinition(FOriginalCaseDefinition);
+  end;
 end;
 
 class function TGBJSONFiredacDeserializer<T>.New(
@@ -173,20 +216,25 @@ begin
   Result := Self.Create(AConnection, AUseIgnore);
 end;
 
-function TGBJSONFiredacDeserializer<T>.ObjectToMongoDocument(AValue: TObject): TMongoDocument;
+function TGBJSONFiredacDeserializer<T>.ObjectToMongoDocument(const AValue: TObject): TMongoDocument;
 var
   LEnv: TMongoEnv;
 begin
-  if not Assigned(AValue) then
-    Exit(nil);
-
-  LEnv := FConnection.Env;
-  Result := LEnv.NewDoc;
+  TGBJSONConfig.GetInstance.CaseDefinition(FCaseDefinition);
   try
-    ObjectToMongoDocument(AValue, Result);
-  except
-    Result.Free;
-    raise;
+    if not Assigned(AValue) then
+      Exit(nil);
+
+    LEnv := FConnection.Env;
+    Result := LEnv.NewDoc;
+    try
+      ObjectToMongoDocument(AValue, Result);
+    except
+      Result.Free;
+      raise;
+    end;
+  finally
+    TGBJSONConfig.GetInstance.CaseDefinition(FOriginalCaseDefinition);
   end;
 end;
 
