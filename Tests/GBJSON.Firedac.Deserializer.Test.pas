@@ -54,6 +54,7 @@ implementation
 function TGBJSONFiredacDeserializerTest.CreateSimpleRestaurant: TRestaurant;
 begin
   Result := TRestaurant.Create;
+  Result.Id := '68d68471f842a913436e249f';
   Result.RestaurantId := '41704620';
   Result.Name := 'Vella';
   Result.Borough := 'Manhattan';
@@ -120,6 +121,7 @@ begin
   LJSON := TJSONObject.ParseJSONValue(FDocument.AsJSON) as TJSONObject;
 
   Assert.IsNotNull(LJSON);
+  Assert.AreEqual('68d68471f842a913436e249f', LJSON.ValueAsJSONObject('Id').ValueAsString('$oid'));
   Assert.AreEqual('Vella', LJSON.ValueAsString('Name'));
   Assert.AreEqual('41704620', LJSON.ValueAsString('RestaurantId'));
   Assert.AreEqual<Integer>(10075, LJSON.ValueAsJSONObject('Address').ValueAsInteger('ZipCode'));

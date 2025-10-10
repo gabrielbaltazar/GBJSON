@@ -16,6 +16,7 @@ uses
   FireDAC.Phys.MongoDBWrapper,
   GBJSON.RTTI,
   GBJSON.Config,
+  GBJSON.DateTime.Helper,
   GBJSON.Firedac.Interfaces;
 
 type
@@ -26,6 +27,11 @@ type
     FUseIgnore: Boolean;
     FOriginalCaseDefinition: TCaseDefinition;
     FCaseDefinition: TCaseDefinition;
+
+    procedure SetValueStr(const AProperty: TRttiProperty; const ADocument: TMongoDocument;
+      const AName: string; const AValue: TValue);
+    procedure SetValueDate(const AProperty: TRttiProperty; const ADocument: TMongoDocument;
+      const AName: string; const AValue: TValue);
 
     procedure ObjectToMongoDocument(AValue: TObject; ADocument: TMongoDocument); overload;
 
@@ -43,6 +49,9 @@ type
   end;
 
 implementation
+
+uses
+  System.JSON.Types;
 
 { TGBJSONFiredacDeserializer<T> }
 
@@ -100,14 +109,13 @@ procedure TGBJSONFiredacDeserializer<T>.AddValueToDocument(AObject: TObject;
 var
   LValue: TValue;
   LName: string;
-  LData: TDateTime;
   LType: TRttiType;
   I: Integer;
 begin
   LValue := AProperty.GetValue(AObject);
   LName := AProperty.JSONName;
   if AProperty.IsString then
-    ADocument.Add(LName, LValue.AsString)
+    SetValueStr(AProperty, ADocument, LName, LValue)
   else
   if AProperty.IsInteger then
     ADocument.Add(LName, LValue.AsInteger)
@@ -122,10 +130,7 @@ begin
     ADocument.Add(LName, LValue.AsBoolean)
   else
   if AProperty.IsDateTime then
-  begin
-    LData := LValue.AsExtended;
-    ADocument.Add(LName, LData);
-  end
+    Self.SetValueDate(AProperty, ADocument, LName, LValue)
   else
   if AProperty.IsObject then
   begin
@@ -236,6 +241,37 @@ begin
   finally
     TGBJSONConfig.GetInstance.CaseDefinition(FOriginalCaseDefinition);
   end;
+end;
+
+procedure TGBJSONFiredacDeserializer<T>.SetValueDate(const AProperty: TRttiProperty; const ADocument: TMongoDocument;
+  const AName: string; const AValue: TValue);
+var
+  LData: TDateTime;
+begin
+  LData := AValue.AsExtended;
+  if AProperty.IsMongoDate then
+    ADocument.Add(AName, LData)
+  else
+    ADocument.Add(AName, LData.DateTimeToIso8601);
+end;
+
+procedure TGBJSONFiredacDeserializer<T>.SetValueStr(const AProperty: TRttiProperty; const ADocument: TMongoDocument; const AName: string; const AValue: TValue);
+var
+  LJSONOId: TJsonOid;
+begin
+  if AProperty.IsString then
+  begin
+    if AProperty.IsMongoId then
+    begin
+      if AValue.AsString <> EmptyStr then
+      begin
+        LJSONOId := TJsonOid.Create(AValue.AsString);
+        ADocument.Add(AName, LJSONOId);
+      end;
+    end
+    else
+      ADocument.Add(AName, AValue.AsString)
+  end
 end;
 
 procedure TGBJSONFiredacDeserializer<T>.ObjectToMongoDocument(AValue: TObject;

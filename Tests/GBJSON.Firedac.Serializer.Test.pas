@@ -7,6 +7,7 @@ uses
   System.DateUtils,
   System.Generics.Collections,
   System.JSON,
+  System.JSON.Types,
   FireDAC.Comp.Client,
   FireDAC.Phys.MongoDBWrapper,
   FireDAC.Phys.MongoDB,
@@ -66,6 +67,7 @@ procedure TGBJSONFiredacSerializerTest.SimpleRestaurant;
 begin
   FDocument := FMongoConn.Env.NewDoc;
   FDocument
+    .Add('Id', TJsonOid.Create('68d685cff842a913436e24a0'))
     .BeginObject('Address')
       .Add('Street', '2 Avenue')
       .Add('ZipCode', 10075)
@@ -94,6 +96,7 @@ begin
 
   FRestaurant := FSerializer.DocumentToObject(FDocument);
   Assert.IsNotNull(FRestaurant);
+  Assert.AreEqual('68d685cff842a913436e24a0', FRestaurant.Id);
   Assert.AreEqual('41704620', FRestaurant.RestaurantId);
   Assert.AreEqual('Vella', FRestaurant.Name);
   Assert.AreEqual('Manhattan', FRestaurant.Borough);

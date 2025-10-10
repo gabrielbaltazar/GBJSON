@@ -7,22 +7,29 @@ interface
 {$ENDIF}
 
 uses
-  GBJSON.Interfaces,
-  GBJSON.Base,
-  GBJSON.RTTI,
-  GBJSON.DateTime.Helper,
   System.Generics.Collections,
   System.Rtti,
   System.JSON,
   System.Math,
   System.SysUtils,
   System.StrUtils,
-  System.TypInfo;
+  System.TypInfo,
+  GBJSON.Interfaces,
+  GBJSON.Base,
+  GBJSON.RTTI,
+  GBJSON.DateTime.Helper;
 
 type
   TGBJSONSerializer<T: class, constructor> = class(TGBJSONBase, IGBJSONSerializer<T>)
   private
     FUseIgnore: Boolean;
+
+    procedure SetValueArray(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+    procedure SetValueBool(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+    procedure SetValueDate(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+    procedure SetValueFloat(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+    procedure SetValueEnum(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+    procedure SetValueStr(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
 
     procedure JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType); overload;
     procedure JsonObjectToObjectList(AObject: TObject; AJsonArray: TJSONArray; AProperty: TRttiProperty);
@@ -59,15 +66,7 @@ end;
 procedure TGBJSONSerializer<T>.JsonObjectToObject(AObject: TObject; AJsonObject: TJSONObject; AType: TRttiType);
 var
   LProperty: TRttiProperty;
-  LType: TRttiType;
-  LValues: TArray<TValue>;
   LJsonValue: TJSONValue;
-  LJSONDate: TJSONValue;
-  LDate: TDateTime;
-  LEnumValue: Integer;
-  LBoolValue: Boolean;
-  LStrValue: string;
-  I: Integer;
 begin
   for LProperty in AType.GetProperties do
   begin
@@ -85,7 +84,7 @@ begin
 
       if LProperty.IsString then
       begin
-        LProperty.SetValue(AObject, LJsonValue.Value);
+        SetValueStr(AObject, LProperty, LJsonValue);
         Continue;
       end;
 
@@ -97,17 +96,13 @@ begin
 
       if LProperty.IsInteger then
       begin
-        LProperty.SetValue(AObject, StrToIntDef( LJsonValue.Value, 0));
+        LProperty.SetValue(AObject, StrToIntDef(LJsonValue.Value, 0));
         Continue;
       end;
 
       if LProperty.IsEnum then
       begin
-        if LJsonValue.Value.Trim.IsEmpty then
-          Continue;
-        LEnumValue := GetEnumValue(LProperty.GetValue(AObject).TypeInfo, LJsonValue.Value);
-        LProperty.SetValue(AObject,
-          TValue.FromOrdinal(LProperty.GetValue(AObject).TypeInfo, LEnumValue));
+        SetValueEnum(AObject, LProperty, LJsonValue);
         Continue;
       end;
 
@@ -119,56 +114,30 @@ begin
 
       if LProperty.IsFloat then
       begin
-        LStrValue := LJsonValue.Value.Replace('.', FormatSettings.DecimalSeparator);
-        LProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(LStrValue, 0)));
+        SetValueFloat(AObject, LProperty, LJsonValue);
         Continue;
       end;
 
       if LProperty.IsDateTime then
       begin
-        if LJsonValue.TryGetValue<TJSONValue>('$date', LJSONDate) then
-          LDate.FromIso8601ToDateTime(LJSONDate.Value)
-        else
-          LDate.FromIso8601ToDateTime(LJsonValue.Value);
-        LProperty.SetValue(AObject, TValue.From<TDateTime>(LDate));
+        SetValueDate(AObject, LProperty, LJsonValue);
         Continue;
       end;
 
       if LProperty.IsList then
       begin
-        jsonObjectToObjectList(AObject, TJSONArray(LJsonValue), LProperty);
+        JsonObjectToObjectList(AObject, TJSONArray(LJsonValue), LProperty);
         Continue;
       end;
 
       if LProperty.IsBoolean then
       begin
-        LBoolValue := LJsonValue.Value.ToLower.Equals('true');
-        LProperty.SetValue(AObject, TValue.From<Boolean>(LBoolValue));
+        SetValueBool(AObject, LProperty, LJsonValue);
         Continue;
       end;
 
       if LProperty.IsArray then
-      begin
-        if (not Assigned(LJsonValue)) or (not (LJsonValue is TJSONArray)) then
-          Continue;
-
-        LType := LProperty.GetListType(AObject);
-        SetLength(LValues, TJSONArray(LJsonValue).Count);
-        for I := 0 to Pred(TJSONArray(LJsonValue).Count) do
-        begin
-          if LType.TypeKind.IsString then
-            LValues[I] := TValue.From<string>(TJSONArray(LJsonValue).Items[I].Value)
-          else
-          if LType.TypeKind.IsInteger then
-            LValues[I] := TValue.From<Integer>(TJSONArray(LJsonValue).Items[I].Value.ToInteger)
-          else
-          if LType.TypeKind.IsFloat then
-            LValues[I] := TValue.From<Double>(TJSONArray(LJsonValue).Items[I].Value.ToDouble)
-        end;
-
-        LProperty.SetValue(AObject,
-            TValue.FromArray(LProperty.PropertyType.Handle, LValues));
-      end;
+        SetValueArray(AObject, LProperty, LJsonValue);
     except
       on E: Exception do
       begin
@@ -262,6 +231,80 @@ end;
 class function TGBJSONSerializer<T>.New(AUseIgnore: Boolean): IGBJSONSerializer<T>;
 begin
   Result := Self.Create(AUseIgnore);
+end;
+
+procedure TGBJSONSerializer<T>.SetValueArray(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+var
+  LType: TRttiType;
+  LValues: TArray<TValue>;
+  I: Integer;
+begin
+  if (not Assigned(AJSONValue)) or (not (AJSONValue is TJSONArray)) then
+    Exit;
+
+  LType := AProperty.GetListType(AObject);
+  SetLength(LValues, TJSONArray(AJSONValue).Count);
+  for I := 0 to Pred(TJSONArray(AJSONValue).Count) do
+  begin
+    if LType.TypeKind.IsString then
+      LValues[I] := TValue.From<string>(TJSONArray(AJSONValue).Items[I].Value)
+    else
+    if LType.TypeKind.IsInteger then
+      LValues[I] := TValue.From<Integer>(TJSONArray(AJSONValue).Items[I].Value.ToInteger)
+    else
+    if LType.TypeKind.IsFloat then
+      LValues[I] := TValue.From<Double>(TJSONArray(AJSONValue).Items[I].Value.ToDouble)
+  end;
+
+  AProperty.SetValue(AObject, TValue.FromArray(AProperty.PropertyType.Handle, LValues));
+end;
+
+procedure TGBJSONSerializer<T>.SetValueBool(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+var
+  LBoolValue: Boolean;
+begin
+  LBoolValue := AJSONValue.Value.ToLower.Equals('true');
+  AProperty.SetValue(AObject, TValue.From<Boolean>(LBoolValue));
+end;
+
+procedure TGBJSONSerializer<T>.SetValueDate(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+var
+  LJSONDate: TJSONValue;
+  LDate: TDateTime;
+begin
+  if AJSONValue.TryGetValue<TJSONValue>('$date', LJSONDate) then
+    LDate.FromIso8601ToDateTime(LJSONDate.Value)
+  else
+    LDate.FromIso8601ToDateTime(AJSONValue.Value);
+  AProperty.SetValue(AObject, TValue.From<TDateTime>(LDate));
+end;
+
+procedure TGBJSONSerializer<T>.SetValueEnum(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+var
+  LEnumValue: Integer;
+begin
+  if AJsonValue.Value.Trim.IsEmpty then
+    Exit;
+  LEnumValue := GetEnumValue(AProperty.GetValue(AObject).TypeInfo, AJSONValue.Value);
+  AProperty.SetValue(AObject, TValue.FromOrdinal(AProperty.GetValue(AObject).TypeInfo, LEnumValue));
+end;
+
+procedure TGBJSONSerializer<T>.SetValueFloat(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+var
+  LStrValue: string;
+begin
+  LStrValue := AJSONValue.Value.Replace('.', FormatSettings.DecimalSeparator);
+  AProperty.SetValue(AObject, TValue.From<Double>( StrToFloatDef(LStrValue, 0)));
+end;
+
+procedure TGBJSONSerializer<T>.SetValueStr(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
+var
+  LJSONId: TJSONValue;
+begin
+  if AJSONValue.TryGetValue<TJSONValue>('$oid', LJSONId) then
+    AProperty.SetValue(AObject, LJSONId.Value)
+  else
+    AProperty.SetValue(AObject, AJSONValue.Value);
 end;
 
 end.

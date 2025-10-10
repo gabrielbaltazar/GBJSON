@@ -64,6 +64,9 @@ type
     function IsBoolean: Boolean;
     function IsVariant: Boolean;
 
+    function IsMongoDate: Boolean;
+    function IsMongoId: Boolean;
+
     function IsEmpty(AObject: TObject): Boolean;
     function IsIgnore(AClass: TClass): Boolean;
     function IsReadOnly: Boolean;
@@ -264,6 +267,22 @@ begin
 
   if Self.PropertyType.ToString.ToLower.StartsWith('tlist<') then
     Exit(True);
+end;
+
+function TGBRTTIPropertyHelper.IsMongoDate: Boolean;
+var
+  LMongoDate: MongoDate;
+begin
+  LMongoDate := GetAttribute<MongoDate>;
+  Result := Assigned(LMongoDate);
+end;
+
+function TGBRTTIPropertyHelper.IsMongoId: Boolean;
+var
+  LMongoId: MongoId;
+begin
+  LMongoId := GetAttribute<MongoId>;
+  Result := Assigned(LMongoId);
 end;
 
 function TGBRTTIPropertyHelper.IsObject: Boolean;

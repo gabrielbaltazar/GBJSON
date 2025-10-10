@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils,
-  System.Generics.Collections;
+  System.Generics.Collections,
+  GBJSON.Attributes;
 
 type
   TAddress = class
@@ -42,10 +43,13 @@ type
     FCuisine: string;
     FAddress: TAddress;
     FGrades: TObjectList<TGrade>;
+    FId: string;
   public
     constructor Create;
     destructor Destroy; override;
 
+    [MongoId]
+    property Id: string read FId write FId;
     property RestaurantId: string read FRestaurantId write FRestaurantId;
     property Name: string read FName write FName;
     property Borough: string read FBorough write FBorough;

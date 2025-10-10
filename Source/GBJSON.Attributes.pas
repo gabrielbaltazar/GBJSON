@@ -43,6 +43,12 @@ type
     property ReadOnly: Boolean read FReadOnly;
   end;
 
+  MongoDate = class(TCustomAttribute)
+  end;
+
+  MongoId = class(TCustomAttribute)
+  end;
+
 implementation
 
 { JSONIgnore }
