@@ -63,6 +63,9 @@ type
   MongoId = class(TCustomAttribute)
   end;
 
+  MongoIgnore = class(TCustomAttribute)
+  end;
+
 implementation
 
 { JSONIgnore }

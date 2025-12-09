@@ -191,6 +191,9 @@ begin
       LType := AProperty.GetListType(AObject);
       LJsonValue:= EmptyStr;
 
+      if LType.TypeKind.IsEnum then
+        LJsonValue := '"' + GetEnumName(LValue.GetArrayElement(I).TypeInfo, LValue.GetArrayElement(I).AsOrdinal) + '"'
+      else
       if LType.TypeKind.IsString then
         LJsonValue := '"' + LValue.GetArrayElement(I).AsString + '"'
       else

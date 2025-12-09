@@ -174,6 +174,7 @@ var
   LObjectItem: TObject;
   LValue: TValue;
   LListType: TRttiType;
+  LEnumValue: Integer;
 begin
   if not Assigned(AJsonArray) then
     Exit;
@@ -191,12 +192,19 @@ begin
     end
     else
     begin
+      if LListType.TypeKind.IsEnum then
+      begin
+        LEnumValue := GetEnumValue(LListType.Handle,  AJsonArray.Items[I].Value);
+        AProperty.GetValue(AObject).AsObject.InvokeMethod('Add', [TValue.FromOrdinal(LListType.Handle, LEnumValue)]);
+        Continue;
+      end
+      else
       if LListType.TypeKind.IsString then
-        LValue := TValue.From<string>(AJsonArray.Items[I].GetValue<string>);
-
+        LValue := TValue.From<string>(AJsonArray.Items[I].GetValue<string>)
+      else
       if LListType.TypeKind.IsFloat then
-        LValue := TValue.From<Double>(AJsonArray.Items[I].GetValue<Double>);
-
+        LValue := TValue.From<Double>(AJsonArray.Items[I].GetValue<Double>)
+      else
       if LListType.TypeKind.IsInteger then
         LValue := TValue.From<Integer>(AJsonArray.Items[I].GetValue<Integer>);
 

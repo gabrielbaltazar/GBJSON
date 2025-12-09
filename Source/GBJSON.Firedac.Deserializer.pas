@@ -92,6 +92,9 @@ begin
     begin
       LType := AProperty.GetListType(AObject);
 
+      if LType.TypeKind.IsEnum then
+        ADocument.Add(I.ToString, GetEnumName(LValue.GetArrayElement(I).TypeInfo, LValue.GetArrayElement(I).AsOrdinal))
+      else
       if LType.TypeKind.IsString then
         ADocument.Add(I.ToString, LValue.GetArrayElement(I).AsString)
       else
@@ -314,6 +317,8 @@ begin
   try
     for LProperty in LType.GetProperties do
     begin
+      if LProperty.IsMongoIgnore then
+        Continue;
       if not LProperty.IsReadable then
         Continue;
       if ((not FUseIgnore) or (not LProperty.IsIgnore(AValue.ClassType))) then

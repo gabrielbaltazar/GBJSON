@@ -38,6 +38,7 @@ type
 
   TTypeKindHelper = record helper for TTypeKind
   public
+    function IsEnum: Boolean;
     function IsString: Boolean;
     function IsInteger: Boolean;
     function IsArray: Boolean;
@@ -66,6 +67,7 @@ type
 
     function IsMongoDate: Boolean;
     function IsMongoId: Boolean;
+    function IsMongoIgnore: Boolean;
 
     function IsEmpty(AObject: TObject): Boolean;
     function IsIgnore(AClass: TClass): Boolean;
@@ -285,6 +287,11 @@ begin
   Result := Assigned(LMongoId);
 end;
 
+function TGBRTTIPropertyHelper.IsMongoIgnore: Boolean;
+begin
+  Result := Self.GetAttribute<MongoIgnore> <> nil;
+end;
+
 function TGBRTTIPropertyHelper.IsObject: Boolean;
 begin
   Result := (not IsList) and (Self.PropertyType.TypeKind.IsObject);
@@ -416,6 +423,11 @@ end;
 function TTypeKindHelper.IsArray: Boolean;
 begin
   Result := Self in [tkSet, tkArray, tkDynArray];
+end;
+
+function TTypeKindHelper.IsEnum: Boolean;
+begin
+  Result := Self = tkEnumeration;
 end;
 
 function TTypeKindHelper.IsFloat: Boolean;
