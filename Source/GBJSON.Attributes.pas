@@ -21,6 +21,20 @@ type
   JSONNameAttribute = REST.Json.Types.JSONNameAttribute;
 {$ENDIF}
 
+  TEnumType = (etString, etInteger);
+
+  JSONEnum = class(TCustomAttribute)
+  private
+    FEnumType: TEnumType;
+    FEnumValues: string;
+    function GetValues: TArray<string>;
+  public
+    constructor Create(const AEnumType: TEnumType; const AValues: string);
+    property EnumType: TEnumType read FEnumType;
+    property EnumValues: string read FEnumValues;
+    property Values: TArray<string> read GetValues;
+  end;
+
   JSONIgnore = class(TCustomAttribute)
   private
     FIgnoreProperties: TArray<string>;
@@ -75,6 +89,19 @@ constructor JSONProp.Create(AName: string; AReadOnly: Boolean);
 begin
   FName := AName;
   FReadOnly := AReadOnly;
+end;
+
+{ JSONEnum }
+
+constructor JSONEnum.Create(const AEnumType: TEnumType; const AValues: string);
+begin
+  FEnumType := AEnumType;
+  FEnumValues := AValues;
+end;
+
+function JSONEnum.GetValues: TArray<string>;
+begin
+  Result := FEnumValues.Split([',']);
 end;
 
 end.

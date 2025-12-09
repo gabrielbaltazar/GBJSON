@@ -7,23 +7,25 @@ interface
 {$ENDIF}
 
 uses
-  GBJSON.Interfaces,
-  GBJSON.Config,
-  GBJSON.Base,
-  GBJSON.RTTI,
-  GBJSON.DateTime.Helper,
   System.Rtti,
   System.JSON,
   System.SysUtils,
   System.Generics.Collections,
   System.StrUtils,
   System.Variants,
-  System.TypInfo;
+  System.TypInfo,
+  GBJSON.Interfaces,
+  GBJSON.Config,
+  GBJSON.Base,
+  GBJSON.RTTI,
+  GBJSON.DateTime.Helper;
 
 type
   TGBJSONDeserializer<T: class, constructor> = class(TGBJSONBase, IGBJSONDeserializer<T>)
   private
     FUseIgnore: Boolean;
+
+    function GetEnumValue(const AObject: TObject; const AProperty: TRttiProperty): string;
 
     procedure ProcessOptions(AJsonObject: TJSOnObject);
     function ObjectToJsonString(AObject: TObject; AType: TRttiType): string; overload;
@@ -44,6 +46,7 @@ implementation
 { TGBJSONDeserializer }
 
 uses
+  GBJSON.Attributes,
   GBJSON.Helper;
 
 constructor TGBJSONDeserializer<T>.Create(AUseIgnore: Boolean = True);
@@ -61,6 +64,23 @@ begin
   Result := TJSONObject.ParseJSONValue(LJSON) as TJSONObject;
   if Assigned(Result) then
     ProcessOptions(Result);
+end;
+
+function TGBJSONDeserializer<T>.GetEnumValue(const AObject: TObject; const AProperty: TRttiProperty): string;
+var
+  LEnumAttribute: JSONEnum;
+  LEnumValue: Integer;
+begin
+  LEnumAttribute := AProperty.GetAttribute<JSONEnum>;
+  LEnumValue := AProperty.GetValue(AObject).AsOrdinal;
+  if Assigned(LEnumAttribute) then
+  begin
+    Result := LEnumAttribute.Values[LEnumValue];
+    if LEnumAttribute.EnumType = etString then
+      Result := '"' + Result + '"';
+  end
+  else
+    Result := '"' + GetEnumName(AProperty.GetValue(AObject).TypeInfo, LEnumValue) + '"';
 end;
 
 function TGBJSONDeserializer<T>.ListToJSONArray(AValue: TObjectList<T>): TJSONArray;

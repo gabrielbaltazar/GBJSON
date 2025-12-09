@@ -32,6 +32,8 @@ type
       const AName: string; const AValue: TValue);
     procedure SetValueDate(const AProperty: TRttiProperty; const ADocument: TMongoDocument;
       const AName: string; const AValue: TValue);
+    procedure SetValueEnum(const AProperty: TRttiProperty; const ADocument: TMongoDocument;
+      const AName: string; const AValue: TValue);
 
     procedure ObjectToMongoDocument(AValue: TObject; ADocument: TMongoDocument); overload;
 
@@ -51,6 +53,7 @@ type
 implementation
 
 uses
+  GBJSON.Attributes,
   System.JSON.Types;
 
 { TGBJSONFiredacDeserializer<T> }
@@ -121,7 +124,7 @@ begin
     ADocument.Add(LName, LValue.AsInteger)
   else
   if AProperty.IsEnum then
-    ADocument.Add(LName, GetEnumName(AProperty.GetValue(AObject).TypeInfo, AProperty.GetValue(AObject).AsOrdinal))
+    SetValueEnum(AProperty, ADocument, LName, LValue)
   else
   if AProperty.IsFloat then
     ADocument.Add(LName, LValue.AsExtended)
@@ -249,10 +252,34 @@ var
   LData: TDateTime;
 begin
   LData := AValue.AsExtended;
+  if LData = 0 then
+    Exit;
+
   if AProperty.IsMongoDate then
     ADocument.Add(AName, LData)
   else
     ADocument.Add(AName, LData.DateTimeToIso8601);
+end;
+
+procedure TGBJSONFiredacDeserializer<T>.SetValueEnum(const AProperty: TRttiProperty; const ADocument: TMongoDocument; const AName: string;
+  const AValue: TValue);
+var
+  LEnumAttribute: JSONEnum;
+  LEnumValue: Integer;
+  LValue: string;
+begin
+  LEnumAttribute := AProperty.GetAttribute<JSONEnum>;
+  LEnumValue := AValue.AsOrdinal;
+  if Assigned(LEnumAttribute) then
+  begin
+    LValue := LEnumAttribute.Values[LEnumValue];
+    if LEnumAttribute.EnumType = etInteger then
+      ADocument.Add(AName, StrToInt(LValue))
+    else
+      ADocument.Add(AName, LValue);
+  end
+  else
+    ADocument.Add(AName, GetEnumName(AValue.TypeInfo, LEnumValue));
 end;
 
 procedure TGBJSONFiredacDeserializer<T>.SetValueStr(const AProperty: TRttiProperty; const ADocument: TMongoDocument; const AName: string; const AValue: TValue);

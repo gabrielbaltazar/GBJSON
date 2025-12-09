@@ -46,6 +46,9 @@ type
 
 implementation
 
+uses
+  GBJSON.Attributes;
+
 { TGBJSONSerializer }
 
 constructor TGBJSONSerializer<T>.Create(AUseIgnore: Boolean);
@@ -282,10 +285,23 @@ end;
 procedure TGBJSONSerializer<T>.SetValueEnum(const AObject: TObject; const AProperty: TRttiProperty; const AJSONValue: TJSONValue);
 var
   LEnumValue: Integer;
+  LValues: TArray<string>;
+  LEnumAttribute: JSONEnum;
 begin
-  if AJsonValue.Value.Trim.IsEmpty then
+  if AJSONValue.Value.Trim.IsEmpty then
     Exit;
-  LEnumValue := GetEnumValue(AProperty.GetValue(AObject).TypeInfo, AJSONValue.Value);
+
+  LEnumAttribute := AProperty.GetAttribute<JSONEnum>;
+  if Assigned(LEnumAttribute) then
+  begin
+    LValues := LEnumAttribute.Values;
+    LEnumValue := IndexText(AJSONValue.Value.Trim, LValues);
+    if LEnumValue < 0 then
+      LEnumValue := 0;
+  end
+  else
+    LEnumValue := GetEnumValue(AProperty.GetValue(AObject).TypeInfo, AJSONValue.Value);
+
   AProperty.SetValue(AObject, TValue.FromOrdinal(AProperty.GetValue(AObject).TypeInfo, LEnumValue));
 end;
 
